@@ -83,7 +83,7 @@ EVENTSTREAM_AUTHORIZER_CLASS = 'myapp.authorizer.MyAuthorizer'
 
 Whenever permissions change, call `channel_permission_changed`. This will cause clients to be disconnected if they lost permission to the channel.
 
-```py:
+```py
 from django_eventstream import channel_permission_changed
 
 channel_permission_changed(user, '_mychannel')
