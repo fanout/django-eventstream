@@ -1,8 +1,8 @@
 # Django EventStream
 
-Django EventStream provides an API endpoint for your Django application that can push data instantly to clients. It relies on Pushpin or Fanout Cloud as a proxy for managing the client connections. Data is sent using the Server-Sent Events protocol, which is an HTTP-based protocol where data is streamed out using a never-ending HTTP response.
+Django EventStream provides an API endpoint for your Django application that can push data to connected clients. It relies on Pushpin or Fanout Cloud to manage the connections. Data is sent using the Server-Sent Events protocol (SSE), in which data is streamed over a never-ending HTTP response.
 
-For example, you could set up an endpoint on path `/events/` that a client could connect to with a GET request:
+For example, you could create an endpoint, `/events/`, that a client could connect to with a GET request:
 
 ```http
 GET /events/?channel=test HTTP/1.1
@@ -10,7 +10,7 @@ Host: api.example.com
 Accept: text/event-stream
 ```
 
-The client would receive a streaming HTTP response looking like this:
+The client would receive a streaming HTTP response with content looking like this:
 
 ```http
 HTTP/1.1 200 OK
@@ -34,6 +34,7 @@ Features:
 
 * Easy to consume from browsers or native applications.
 * Highly reliable. Events are persisted to your database, so clients can recover if they get disconnected.
+* Set per-user channel permissions.
 * Reasonably clean API endpoint contract that can be exposed to third parties.
 
 ## Setup
