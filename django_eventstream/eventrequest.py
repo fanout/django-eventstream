@@ -30,13 +30,18 @@ class EventRequest(object):
 		if len(channels) > channel_limit:
 			raise EventRequest.Error('Channel limit exceeded')
 
-		grip_last = http_request.META.get('HTTP_GRIP_LAST')
-		if grip_last:
-			try:
-				grip_last = parse_grip_last(grip_last)
-			except:
-				raise EventRequest.GripError(
-					'Failed to parse Grip-Last header')
+		grip_last = None
+		if http_request.GET.get('link') == 'true':
+			grip_last = http_request.META.get('HTTP_GRIP_LAST')
+
+			if grip_last:
+				try:
+					grip_last = parse_grip_last(grip_last)
+				except:
+					raise EventRequest.GripError(
+						'Failed to parse Grip-Last header')
+			else:
+				grip_last = {}
 
 			channel_last_ids = {}
 			is_recover = True
@@ -73,9 +78,7 @@ class EventRequest(object):
 						'Failed to parse Last-Event-ID or lastEventId')
 			else:
 				channel_last_ids = {}
-				for channel in channels:
-					channel_last_ids[channel] = None
 
-		self.channels = set(channel_last_ids.keys())
+		self.channels = channels
 		self.channel_last_ids = channel_last_ids
 		self.is_recover = is_recover

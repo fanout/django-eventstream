@@ -1,20 +1,12 @@
-import datetime
 import json
 import urllib
 import threading
 import importlib
 from werkzeug.http import parse_options_header
-from django.utils import timezone
 from django.conf import settings
 from django.http import HttpResponse
 from gripcontrol import HttpStreamFormat
 from django_grip import publish
-
-# minutes before purging an event from the database
-EVENT_TIMEOUT = 60 * 24
-
-# attempt to trim this many events per pass
-EVENT_TRIM_BATCH = 50
 
 tlocal = threading.local()
 
@@ -63,7 +55,11 @@ def sse_error_response(condition, text, extra={}):
 	return HttpResponse(body, content_type='text/event-stream')
 
 def publish_event(channel, event_type, data, pub_id, pub_prev_id):
-	content = sse_encode_event(event_type, data, event_id='%I')
+	if pub_id:
+		event_id = '%I'
+	else:
+		event_id = None
+	content = sse_encode_event(event_type, data, event_id=event_id)
 	publish(
 		'events-%s' % channel,
 		HttpStreamFormat(content),
@@ -83,21 +79,6 @@ def publish_kick(user_id, channel):
 		HttpStreamFormat(close=True),
 		id='kick-2',
 		prev_id='kick-1')
-
-def trim_event_log():
-	from .models import Event
-	now = timezone.now()
-	cutoff = now - datetime.timedelta(minutes=EVENT_TIMEOUT)
-	while True:
-		events = Event.objects.filter(created__lt=cutoff)[:EVENT_TRIM_BATCH]
-		if len(events) < 1:
-			break
-		for e in events:
-			try:
-				e.delete()
-			except Event.DoesNotExist:
-				# someone else deleted. that's fine
-				pass
 
 def load_class(name):
 	at = name.rfind('.')
@@ -123,7 +104,10 @@ def get_class_from_setting(setting_name, default=None):
 	elif default:
 		return get_class(default)
 	else:
-		raise ValueError('%s not specified' % setting_name)
+		return None
+
+def get_storage():
+	return get_class_from_setting('EVENTSTREAM_STORAGE_CLASS')
 
 def get_authorizer():
 	return get_class_from_setting(

@@ -4,13 +4,6 @@ from django.http import HttpResponse
 from .utils import sse_encode_event, make_id
 
 class EventResponse(object):
-	class Item(object):
-		def __init__(self):
-			self.channel = None
-			self.type = None
-			self.id = None
-			self.data = None
-
 	def __init__(self):
 		self.channel_items = {}
 		self.channel_last_ids = {}
@@ -55,22 +48,26 @@ class EventResponse(object):
 		user_id = self.user.id if self.user else 'anonymous'
 
 		channel_header = ''
-		for channel, last_id in last_ids.iteritems():
+		for channel in self.channel_items.iterkeys():
 			if len(channel_header) > 0:
 				channel_header += ', '
 			enc_channel = urllib.quote(channel)
+			last_id = last_ids.get(channel)
 			channel_header += 'events-%s' % enc_channel
-			channel_header += '; prev-id=%s; filter=build-id; filter=skip-users' % last_id
+			if last_id:
+				channel_header += '; prev-id=%s; filter=build-id' % last_id
+			channel_header += '; filter=skip-users'
 		channel_header += ', user-%s; filter=require-sub' % user_id
 		resp['Grip-Channel'] = channel_header
 
-		id_parts = []
-		for channel in last_ids.iterkeys():
-			enc_channel = urllib.quote(channel)
-			id_parts.append('%s:%%(events-%s)s' % (enc_channel, enc_channel))
-		id_format = ','.join(id_parts)
+		if len(last_ids) > 0:
+			id_parts = []
+			for channel in last_ids.iterkeys():
+				enc_channel = urllib.quote(channel)
+				id_parts.append('%s:%%(events-%s)s' % (enc_channel, enc_channel))
+			id_format = ','.join(id_parts)
 
-		resp['Grip-Set-Meta'] = 'id_format="%s"' % id_format
+			resp['Grip-Set-Meta'] = 'id_format="%s"' % id_format
 
 		keep_alive_header = 'event: keep-alive\\ndata:\\n\\n'
 		keep_alive_header += '; format=cstring; timeout=20'
