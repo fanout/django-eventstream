@@ -1,10 +1,72 @@
 # Django EventStream
 
-Reliable, multi-channel Server-Sent Events for Django, using Pushpin or Fanout Cloud.
+Django EventStream provides an API endpoint for your Django application that can push data to connected clients. It relies on Pushpin or Fanout Cloud to manage the connections. Data is sent using the Server-Sent Events protocol (SSE), in which data is streamed over a never-ending HTTP response.
+
+For example, you could create an endpoint, `/events/`, that a client could connect to with a GET request:
+
+```http
+GET /events/?channel=test HTTP/1.1
+Host: api.example.com
+Accept: text/event-stream
+```
+
+The client would receive a streaming HTTP response with content looking like this:
+
+```http
+HTTP/1.1 200 OK
+Transfer-Encoding: chunked
+Connection: Transfer-Encoding
+Content-Type: text/event-stream
+
+event: stream-open
+data:
+
+event: message
+id: test:1
+data: {"foo": "bar"}
+
+event: message
+id: test:2
+data: {"bar": "baz"}
+```
+
+Features:
+
+* Easy to consume from browsers or native applications.
+* Highly reliable. Events are persisted to your database, so clients can recover if they get disconnected.
+* Set per-user channel permissions.
+* Reasonably clean API endpoint contract that can be exposed to third parties.
 
 ## Setup
 
-Add the app to settings.py:
+Install this module:
+
+```sh
+pip install django-eventstream
+```
+
+Then a few changes need to be made to `settings.py`.
+
+Add the `GripMiddleware`:
+
+```py
+MIDDLEWARE = [
+    'django_grip.GripMiddleware',
+    ...
+]
+```
+
+Set `GRIP_PROXES` with your Pushpin or Fanout Cloud settings:
+
+```py
+GRIP_PROXIES = [{
+    'key': b64decode('your-realm-key'),
+    'control_uri': 'http://api.fanout.io/realm/your-realm',
+    'control_iss': 'your-realm'
+}]
+```
+
+Add the `django_eventstream` app:
 
 ```py
 INSTALLED_APPS = [
@@ -13,13 +75,13 @@ INSTALLED_APPS = [
 ]
 ```
 
-Set up the database:
+Set up the database tables:
 
 ```sh
 python manage.py migrate
 ```
 
-Set up an endpoint in urls.py:
+Add an endpoint in `urls.py`:
 
 ```py
 from django.conf.urls import url, include
@@ -64,7 +126,7 @@ send_event('test', 'message', {'text': 'hello world'})
 
 ## Authorization
 
-Declare authorizer class:
+Declare authorizer class with your authorization logic:
 
 ```py
 class MyAuthorizer(object):
