@@ -14,7 +14,7 @@ author_email='justin@karneges.com',
 url='https://github.com/fanout/django-eventstream',
 license='MIT',
 zip_safe=False,
-packages=['django_eventstream', 'django_eventstream.migrations'],
+packages=['django_eventstream', 'django_eventstream.migrations', 'django_eventstream.management', 'django_eventstream.management.commands'],
 package_data={'django_eventstream': ['static/django_eventstream/*']},
 install_requires=['django_grip>=1.7,<3', 'Werkzeug>=0.12,<1'],
 classifiers=[
