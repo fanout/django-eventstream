@@ -1,5 +1,4 @@
 import copy
-from .event import Event
 from .storage import EventDoesNotExist
 from .eventresponse import EventResponse
 from .utils import make_id, publish_event, publish_kick, \
@@ -21,8 +20,13 @@ def send_event(channel, event_type, data, skip_user_ids=[]):
 		pub_id = None
 		pub_prev_id = None
 
-	# TODO: set pub meta: skip_users=user_id1,user_id2,...
-	publish_event(channel, event_type, data, pub_id, pub_prev_id)
+	publish_event(
+		channel,
+		event_type,
+		data,
+		pub_id,
+		pub_prev_id,
+		skip_user_ids=skip_user_ids)
 
 def get_events(request, limit=100, user=None):
 	resp = EventResponse()
@@ -92,5 +96,4 @@ def channel_permission_changed(user, channel):
 	authorizer = get_authorizer()
 	if not authorizer.can_read_channel(user, channel):
 		user_id = user.id if user else 'anonymous'
-		# TODO: set pub meta: require_sub=channel
-		publish_kick(user_id)
+		publish_kick(user_id, channel)

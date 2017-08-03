@@ -54,31 +54,39 @@ def sse_error_response(condition, text, extra={}):
 	body = sse_encode_event('stream-error', data, event_id='error')
 	return HttpResponse(body, content_type='text/event-stream')
 
-def publish_event(channel, event_type, data, pub_id, pub_prev_id):
+def publish_event(channel, event_type, data, pub_id, pub_prev_id,
+		skip_user_ids=[]):
 	if pub_id:
 		event_id = '%I'
 	else:
 		event_id = None
 	content = sse_encode_event(event_type, data, event_id=event_id)
+	meta = {}
+	if skip_user_ids:
+		meta['skip_users'] = ','.join(skip_user_ids)
 	publish(
 		'events-%s' % channel,
 		HttpStreamFormat(content),
 		id=pub_id,
-		prev_id=pub_prev_id)
+		prev_id=pub_prev_id,
+		meta=meta)
 
 def publish_kick(user_id, channel):
 	msg = 'Permission denied to channels: %s' % channel
 	data = {'condition': 'forbidden', 'text': msg, 'channels': [channel]}
 	content = sse_encode_event('stream-error', data, event_id='error')
+	meta = {'require_sub': 'events-%s' % channel}
 	publish(
 		'user-%s' % user_id,
 		HttpStreamFormat(content),
-		id='kick-1')
+		id='kick-1',
+		meta=meta)
 	publish(
 		'user-%s' % user_id,
 		HttpStreamFormat(close=True),
 		id='kick-2',
-		prev_id='kick-1')
+		prev_id='kick-1',
+		meta=meta)
 
 def load_class(name):
 	at = name.rfind('.')
