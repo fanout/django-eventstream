@@ -60,14 +60,20 @@ class EventResponse(object):
 		channel_header += ', user-%s; filter=require-sub' % user_id
 		resp['Grip-Channel'] = channel_header
 
+		set_meta_header = ''
+
 		if len(last_ids) > 0:
 			id_parts = []
 			for channel in last_ids.iterkeys():
 				enc_channel = urllib.quote(channel)
 				id_parts.append('%s:%%(events-%s)s' % (enc_channel, enc_channel))
 			id_format = ','.join(id_parts)
+			set_meta_header += 'id_format="%s"' % id_format
 
-			resp['Grip-Set-Meta'] = 'id_format="%s"' % id_format
+		if len(set_meta_header) > 0:
+			set_meta_header += ', '
+		set_meta_header += 'user="%s"' % user_id
+		resp['Grip-Set-Meta'] = set_meta_header
 
 		keep_alive_header = 'event: keep-alive\\ndata:\\n\\n'
 		keep_alive_header += '; format=cstring; timeout=20'
