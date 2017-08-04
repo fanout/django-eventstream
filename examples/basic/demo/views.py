@@ -10,5 +10,5 @@ class MyAuthorizer(object):
 def home(request):
 	context = {}
 	context['url'] = '/events/?channel=test'
-	#context['last_id'] = get_current_event_id(['test'])
+	context['last_id'] = get_current_event_id(['test'])
 	return render(request, 'demo/home.html', context)
