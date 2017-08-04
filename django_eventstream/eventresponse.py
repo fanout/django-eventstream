@@ -1,7 +1,12 @@
 import copy
-import urllib
+import six
 from django.http import HttpResponse
 from .utils import sse_encode_event, make_id
+
+try:
+	from urllib import quote
+except ImportError:
+	from urllib.parse import quote
 
 class EventResponse(object):
 	def __init__(self):
@@ -27,7 +32,7 @@ class EventResponse(object):
 				{'channels': list(self.channel_reset)},
 				event_id=make_id(last_ids))
 
-		for channel, items in self.channel_items.iteritems():
+		for channel, items in six.iteritems(self.channel_items):
 			for item in items:
 				last_ids[channel] = item.id
 				body += sse_encode_event(
@@ -48,10 +53,10 @@ class EventResponse(object):
 		user_id = self.user.id if self.user else 'anonymous'
 
 		channel_header = ''
-		for channel in self.channel_items.iterkeys():
+		for channel in six.iterkeys(self.channel_items):
 			if len(channel_header) > 0:
 				channel_header += ', '
-			enc_channel = urllib.quote(channel)
+			enc_channel = quote(channel)
 			last_id = last_ids.get(channel)
 			channel_header += 'events-%s' % enc_channel
 			if last_id:
@@ -64,8 +69,8 @@ class EventResponse(object):
 
 		if len(last_ids) > 0:
 			id_parts = []
-			for channel in last_ids.iterkeys():
-				enc_channel = urllib.quote(channel)
+			for channel in six.iterkeys(last_ids):
+				enc_channel = quote(channel)
 				id_parts.append('%s:%%(events-%s)s' % (enc_channel, enc_channel))
 			id_format = ','.join(id_parts)
 			set_meta_header += 'id_format="%s"' % id_format

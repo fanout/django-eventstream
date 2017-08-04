@@ -1,5 +1,10 @@
-import urllib
+import six
 from .utils import parse_grip_last, parse_last_event_id
+
+try:
+	from urllib import unquote
+except ImportError:
+	from urllib.parse import unquote
 
 class EventRequest(object):
 	class Error(ValueError):
@@ -45,10 +50,10 @@ class EventRequest(object):
 
 			channel_last_ids = {}
 			is_recover = True
-			for grip_channel, last_id in grip_last.iteritems():
+			for grip_channel, last_id in six.iteritems(grip_last):
 				if not grip_channel.startswith('events-'):
 					continue
-				channel = urllib.unquote(grip_channel[7:])
+				channel = unquote(grip_channel[7:])
 				if channel in channels:
 					channel_last_ids[channel] = last_id
 		else:
@@ -69,8 +74,8 @@ class EventRequest(object):
 					parsed = parse_last_event_id(last_event_id)
 
 					channel_last_ids = {}
-					for channel, last_id in parsed.iteritems():
-						channel = urllib.unquote(channel)
+					for channel, last_id in six.iteritems(parsed):
+						channel = unquote(channel)
 						if channel in channels:
 							channel_last_ids[channel] = last_id
 				except:

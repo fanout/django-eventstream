@@ -1,7 +1,10 @@
+import sys
 import json
 import datetime
 from django.utils import timezone
 from .event import Event
+
+is_python3 = sys.version_info >= (3,)
 
 # minutes before purging an event from the database
 EVENT_TIMEOUT = 60 * 24
@@ -16,7 +19,7 @@ class EventDoesNotExist(Exception):
 
 class DjangoModelStorage(object):
 	def append_event(self, channel, event_type, data):
-		import models
+		from . import models
 
 		db_event = models.Event(
 			channel=channel,
@@ -35,9 +38,12 @@ class DjangoModelStorage(object):
 		return e
 
 	def get_events(self, channel, last_id, limit=100):
-		import models
+		from . import models
 
-		assert(isinstance(last_id, (int, long)))
+		if is_python3:
+			assert(isinstance(last_id, int))
+		else:
+			assert(isinstance(last_id, (int, long)))
 
 		try:
 			ec = models.EventCounter.objects.get(name=channel)
@@ -81,7 +87,7 @@ class DjangoModelStorage(object):
 		return out
 
 	def get_current_id(self, channel):
-		import models
+		from . import models
 
 		try:
 			ec = models.EventCounter.objects.get(name=channel)
@@ -90,7 +96,7 @@ class DjangoModelStorage(object):
 			return 0
 
 	def trim_event_log(self):
-		import models
+		from . import models
 
 		now = timezone.now()
 		cutoff = now - datetime.timedelta(minutes=EVENT_TIMEOUT)

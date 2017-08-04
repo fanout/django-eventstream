@@ -36,7 +36,7 @@ def get_events(request, limit=100, user=None):
 	if len(request.channels) == 0:
 		return resp
 
-	limit_per_type = limit / len(request.channels)
+	limit_per_type = int(limit / len(request.channels))
 	if limit_per_type < 1:
 		limit_per_type = 1
 

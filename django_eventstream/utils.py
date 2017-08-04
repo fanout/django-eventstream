@@ -1,12 +1,17 @@
 import json
-import urllib
 import threading
 import importlib
+import six
 from werkzeug.http import parse_options_header
 from django.conf import settings
 from django.http import HttpResponse
 from gripcontrol import HttpStreamFormat
 from django_grip import publish
+
+try:
+	from urllib import quote
+except ImportError:
+	from urllib.parse import quote
 
 tlocal = threading.local()
 
@@ -35,8 +40,8 @@ def parse_last_event_id(s):
 
 def make_id(ids):
 	id_parts = []
-	for channel, id in ids.iteritems():
-		enc_channel = urllib.quote(channel)
+	for channel, id in six.iteritems(ids):
+		enc_channel = quote(channel)
 		id_parts.append('%s:%s' % (enc_channel, id))
 	return ','.join(id_parts)
 
@@ -49,7 +54,7 @@ def sse_encode_event(event_type, data, event_id=None):
 
 def sse_error_response(condition, text, extra={}):
 	data = {'condition': condition, 'text': text}
-	for k, v in extra.iteritems():
+	for k, v in six.iteritems(extra):
 		data[k] = v
 	body = sse_encode_event('stream-error', data, event_id='error')
 	return HttpResponse(body, content_type='text/event-stream')
