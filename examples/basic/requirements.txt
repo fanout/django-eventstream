@@ -1,0 +1,4 @@
+Django==1.11
+Werkzeug==0.12.2
+django-dotenv==1.4.1
+django-grip==1.8.0

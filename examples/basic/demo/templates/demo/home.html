@@ -1,0 +1,53 @@
+{% load static %}
+<html>
+  <head>
+    <script src="{% static 'django_eventstream/json2.js' %}"></script>
+    <script src="{% static 'django_eventstream/eventsource.min.js' %}"></script>
+    <script src="{% static 'django_eventstream/reconnecting-eventsource.js' %}"></script>
+    <script>
+      var logMessage = function (s) {
+        var outputDiv = document.getElementById('output');
+        outputDiv.innerHTML = outputDiv.innerHTML + s + '<br />';
+      };
+
+      var start = function () {
+        logMessage('connecting...');
+
+{% if last_id %}
+        var es = new ReconnectingEventSource('{{ url|safe }}', {
+          lastEventId: '{{ last_id }}'
+        });
+{% else %}
+        var es = new ReconnectingEventSource('{{ url|safe }}');
+{% endif %}
+
+        es.onopen = function () {
+          logMessage('connected');
+        };
+
+        es.onerror = function () {
+          logMessage('connection error');
+        };
+
+        es.addEventListener('stream-reset', function (e) {
+          e = JSON.parse(e.data);
+          logMessage('stream reset: ' + JSON.stringify(e.channels));
+        }, false);
+
+        es.addEventListener('stream-error', function (e) {
+          // hard stop
+          es.close();
+          e = JSON.parse(e.data);
+          logMessage('stream error: ' + e.condition + ': ' + e.text);
+        }, false);
+
+        es.addEventListener('message', function (e) {
+          logMessage('message: ' + e.data);
+        }, false);
+      };
+    </script>
+  </head>
+  <body onload="start();">
+    <div id="output"></div>
+  </body>
+</html>
