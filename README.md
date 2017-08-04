@@ -33,9 +33,9 @@ data: {"bar": "baz"}
 Features:
 
 * Easy to consume from browsers or native applications.
-* Highly reliable. Events are persisted to your database, so clients can recover if they get disconnected.
+* Highly reliable. Events can be persisted to your database, so clients can recover if they get disconnected.
 * Set per-user channel permissions.
-* Reasonably clean API endpoint contract that can be exposed to third parties.
+* Clean API contract that could be exposed to third parties if desired.
 
 ## Setup
 
@@ -56,14 +56,10 @@ MIDDLEWARE = [
 ]
 ```
 
-Set `GRIP_PROXES` with your Pushpin or Fanout Cloud settings:
+Set `GRIP_URL` with your Pushpin or Fanout Cloud settings:
 
 ```py
-GRIP_PROXIES = [{
-    'key': b64decode('your-realm-key'),
-    'control_uri': 'http://api.fanout.io/realm/your-realm',
-    'control_iss': 'your-realm'
-}]
+GRIP_URL = 'http://api.fanout.io/realm/your-realm?iss=your-realm&key=base64:your-realm-key'
 ```
 
 Add the `django_eventstream` app:
@@ -73,12 +69,6 @@ INSTALLED_APPS = [
     ...
     'django_eventstream',
 ]
-```
-
-Set up the database tables:
-
-```sh
-python manage.py migrate
 ```
 
 Add an endpoint in `urls.py`:
@@ -93,14 +83,71 @@ urlpatterns = [
 ]
 ```
 
+That's it! Clients can now connect to the `/events/` endpoint and get a stream.
+
+To send data to clients, call `send_event`:
+
+```py
+from django_eventstream import send_event
+
+send_event('test', 'message', {'text': 'hello world'})
+```
+
+## Local development
+
+If you're developing locally and want to test with Fanout Cloud, we recommend using [ngrok](https://ngrok.com/) to register a public host that routes to your local instance.
+
+As a convenience, this module comes with a Django command `runserver_ngrok` that acts like `runserver` except it additionally configures your Fanout Cloud realm to use a detected tunnel as the origin server.
+
+From a separate shell, run `ngrok`:
+
+```sh
+ngrok http 8000
+```
+
+Then run the `runserver_ngrok` command:
+
+```sh
+python manage.py runserver_ngrok
+```
+
+You should see output like this:
+
+```
+Setting ngrok tunnel 4f91f84e.ngrok.io as GRIP origin
+...
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+```
+
+Note that it may take a minute or so for the changes to take effect.
+
+## Event storage
+
+By default, events aren't persisted anywhere, so if clients get disconnected or if your server fails to publish data to Pushpin or Fanout Cloud, then clients can miss messages. For reliable delivery, you'll want to enable event storage.
+
+First, set up the database tables:
+
+```sh
+python manage.py migrate
+```
+
+Then, set a storage class in `settings.py`:
+
+```py
+EVENTSTREAM_STORAGE_CLASS = 'django_eventstream.storage.DjangoModelStorage'
+```
+
+That's all you need to do. When storage is enabled, events are written to the database before they are published, and they persist for 24 hours. If clients get disconnected, Pushpin or Fanout Cloud goes down, or your own server goes down or crashes at any time, even mid-publish, the stream will automatically be repaired.
+
+## Receiving in the browser
+
 Include client libraries on the frontend:
 
 ```html
 <script src="{% static 'django_eventstream/eventsource.min.js' %}"></script>
 <script src="{% static 'django_eventstream/reconnecting-eventsource.js' %}"></script>
 ```
-
-## Usage
 
 Listen for data:
 
@@ -116,14 +163,6 @@ es.addEventListener('stream-reset', function (e) {
 }, false);
 ```
 
-Send data:
-
-```py
-from django_eventstream import send_event
-
-send_event('test', 'message', {'text': 'hello world'})
-```
-
 ## Authorization
 
 Declare authorizer class with your authorization logic:
@@ -137,7 +176,7 @@ class MyAuthorizer(object):
         return True
 ```
 
-Configure settings.py to use it:
+Configure `settings.py` to use it:
 
 ```py
 EVENTSTREAM_AUTHORIZER_CLASS = 'myapp.authorizer.MyAuthorizer'
