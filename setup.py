@@ -6,11 +6,11 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md')) as f:
 
 setup(
 name='django-eventstream',
-version='0.2.1',
+version='1.0.0',
 description='Django EventStream library',
 long_description=readme,
 author='Justin Karneges',
-author_email='justin@karneges.com',
+author_email='justin@fanout.io',
 url='https://github.com/fanout/django-eventstream',
 license='MIT',
 zip_safe=False,
