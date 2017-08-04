@@ -2,7 +2,6 @@ import os
 import urlparse
 import requests
 from django.core.management.commands import runserver
-from django.core.management import call_command
 from django_grip import get_pubcontrol
 
 class Command(runserver.Command):
