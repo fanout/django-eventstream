@@ -13,16 +13,19 @@ class EventResponse(object):
 		self.channel_items = {}
 		self.channel_last_ids = {}
 		self.channel_reset = set()
+		self.channel_more = set()
+		self.is_next = False
 		self.is_recover = False
 		self.user = None
 
 	# FIXME: use django-grip instead of manually building headers
 	def to_http_response(self, http_request):
 		last_ids = copy.deepcopy(self.channel_last_ids)
+		event_id = make_id(last_ids)
 
 		body = ''
 
-		if not self.is_recover:
+		if not self.is_next:
 			body += ':' + (' ' * 2048) + '\n'
 			body += 'event: stream-open\ndata:\n\n'
 
@@ -30,25 +33,36 @@ class EventResponse(object):
 			body += sse_encode_event(
 				'stream-reset',
 				{'channels': list(self.channel_reset)},
-				event_id=make_id(last_ids))
+				event_id=event_id)
 
 		for channel, items in six.iteritems(self.channel_items):
 			for item in items:
 				last_ids[channel] = item.id
+				event_id = make_id(last_ids)
 				body += sse_encode_event(
 					item.type,
 					item.data,
-					event_id=make_id(last_ids))
+					event_id=event_id)
 
 		resp = HttpResponse(body, content_type='text/event-stream')
 
+		more = (len(self.channel_more) > 0)
+
 		params = http_request.GET.copy()
-		if 'link' not in params:
-			params['link'] = 'true'
+		params['link'] = 'next'
+		if more:
+			params['lastEventId'] = event_id
+			if 'recover' in params:
+				del params['recover']
+		else:
+			params['recover'] = 'true'
+			if 'lastEventId' in params:
+				del params['lastEventId']
 		uri = http_request.path + '?' + params.urlencode()
 		resp['Grip-Link'] = '<%s>; rel=next' % uri
 
-		resp['Grip-Hold'] = 'stream'
+		if not more:
+			resp['Grip-Hold'] = 'stream'
 
 		user_id = self.user.id if self.user else 'anonymous'
 

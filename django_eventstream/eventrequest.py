@@ -27,6 +27,7 @@ class EventRequest(object):
 
 	def apply_http_request(self, http_request, channel_limit):
 		channels = set(http_request.GET.getlist('channel'))
+		is_next = False
 		is_recover = False
 
 		if len(channels) < 1:
@@ -35,8 +36,11 @@ class EventRequest(object):
 		if len(channels) > channel_limit:
 			raise EventRequest.Error('Channel limit exceeded')
 
+		if http_request.GET.get('link') == 'next':
+			is_next = True
+
 		grip_last = None
-		if http_request.GET.get('link') == 'true':
+		if http_request.GET.get('recover') == 'true':
 			grip_last = http_request.META.get('HTTP_GRIP_LAST')
 
 			if grip_last:
@@ -86,4 +90,5 @@ class EventRequest(object):
 
 		self.channels = channels
 		self.channel_last_ids = channel_last_ids
+		self.is_next = is_next
 		self.is_recover = is_recover

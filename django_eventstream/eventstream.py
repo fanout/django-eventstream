@@ -30,6 +30,7 @@ def send_event(channel, event_type, data, skip_user_ids=[]):
 
 def get_events(request, limit=100, user=None):
 	resp = EventResponse()
+	resp.is_next = request.is_next
 	resp.is_recover = request.is_recover
 	resp.user = user
 
@@ -57,6 +58,7 @@ def get_events(request, limit=100, user=None):
 		reset = False
 
 		last_id = request.channel_last_ids.get(channel)
+		more = False
 
 		if storage:
 			if last_id is not None:
@@ -64,7 +66,10 @@ def get_events(request, limit=100, user=None):
 					events = storage.get_events(
 						channel,
 						int(last_id),
-						limit=limit_per_type)
+						limit=limit_per_type + 1)
+					if len(events) >= limit_per_type + 1:
+						events = events[:limit_per_type]
+						more = True
 				except EventDoesNotExist as e:
 					reset = True
 					events = []
@@ -81,6 +86,8 @@ def get_events(request, limit=100, user=None):
 			resp.channel_last_ids[channel] = last_id
 		if reset:
 			resp.channel_reset.add(channel)
+		if more:
+			resp.channel_more.add(channel)
 	return resp
 
 def get_current_event_id(channels):
