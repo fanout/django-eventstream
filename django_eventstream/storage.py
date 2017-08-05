@@ -63,10 +63,11 @@ class DjangoModelStorage(object):
 				'No such event %d' % last_id,
 				cur_id)
 
+		# increase limit by 1 since we ignore the first result
 		db_events = models.Event.objects.filter(
 			channel=channel,
 			eid__gte=last_id
-		).order_by('eid')[:limit]
+		).order_by('eid')[:limit + 1]
 
 		if len(db_events) == 0 or db_events[0].eid != last_id:
 			raise EventDoesNotExist(
