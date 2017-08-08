@@ -59,6 +59,12 @@ MIDDLEWARE = [
 Set `GRIP_URL` with your Pushpin or Fanout Cloud settings:
 
 ```py
+# pushpin
+GRIP_URL = 'http://localhost:5561'
+```
+
+```py
+# fanout cloud
 GRIP_URL = 'http://api.fanout.io/realm/your-realm?iss=your-realm&key=base64:your-realm-key'
 ```
 
