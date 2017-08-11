@@ -3,3 +3,4 @@ django-grip==1.8.0
 Werkzeug==0.12.2
 six==1.10.0
 django-dotenv==1.4.1
+dj-database-url==0.4.2
