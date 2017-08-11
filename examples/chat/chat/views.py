@@ -9,25 +9,32 @@ from django_eventstream import send_event, get_current_event_id
 from .models import ChatRoom, ChatMessage
 
 def home(request, room_id=None):
-	if not room_id:
-		room_id = 'default'
-
-	try:
-		room = ChatRoom.objects.get(eid=room_id)
-		msgs = []
-		for msg in reversed(ChatMessage.objects.filter(room=room).order_by('-date')[:50]):
-			msgs.append(msg.to_data())
-	except ChatRoom.DoesNotExist:
-		msgs = []
-
 	user = request.GET.get('user')
+	if user:
+		if not room_id:
+			room_id = 'default'
 
-	context = {}
-	context['room_id'] = room_id
-	context['last_id'] = get_current_event_id(['room-%s' % room_id])
-	context['messages'] = msgs
-	context['user'] = user
-	return render(request, 'chat/home.html', context)
+		try:
+			room = ChatRoom.objects.get(eid=room_id)
+			msgs = []
+			for msg in reversed(ChatMessage.objects.filter(room=room).order_by('-date')[:50]):
+				msgs.append(msg.to_data())
+		except ChatRoom.DoesNotExist:
+			msgs = []
+
+		context = {}
+		context['room_id'] = room_id
+		context['last_id'] = get_current_event_id(['room-%s' % room_id])
+		context['messages'] = msgs
+		context['user'] = user
+		return render(request, 'chat/chat.html', context)
+	else:
+		context = {}
+		if room_id:
+			context['room_id'] = room_id
+		else:
+			context['room_id'] = ''
+		return render(request, 'chat/home.html', context)
 
 def messages(request, room_id):
 	if request.method == 'POST':

@@ -1,0 +1,233 @@
+{% load static %}
+<html>
+  <head>
+    <meta id="meta" name="viewport" content="width=device-width; initial-scale=1.0" />
+
+    <script src="{% static 'django_eventstream/json2.js' %}"></script>
+    <script src="{% static 'django_eventstream/eventsource.min.js' %}"></script>
+    <script src="{% static 'django_eventstream/reconnecting-eventsource.js' %}"></script>
+    <script src="{% static 'chat/jquery-3.2.1.min.js' %}"></script>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+
+      input, div {
+        font-size: 16px;
+      }
+
+      header#chat-header {
+        height: 32px;
+        line-height: 32px;
+        text-align: center;
+        color: #ffffff;
+        background-color: #00a79d;
+        margin: 0;
+      }
+
+      div#chat-log {
+        overflow: auto;
+      }
+
+      div#chat-input-area {
+        width: 100%;
+        height: 32px;
+        line-height: 32px;
+        color: #ffffff;
+        background-color: #00a79d;
+        margin: 0;
+      }
+
+      form#send-form {
+        width: 100%;
+        overflow: hidden;
+        margin: 0;
+      }
+
+      span#chat-input-span {
+        display: block;
+        overflow: hidden;
+      }
+
+      input#chat-input {
+        width: 100%;
+      }
+
+      button#send-button {
+        float: right;
+      }
+
+      input#nick-input {
+        width: 400px;
+      }
+
+{% if user %}
+      div#join-elements {
+        display: none;
+      }
+{% else %}
+      div#chat-elements {
+        display: none;
+      }
+{% endif %}
+
+      /*div#chat-log {
+        display: block;
+        width: 600px;
+        height: 300px;
+        overflow: auto;
+        border: 2px solid black;
+      }*/
+    </style>
+
+    <script type="text/javascript">
+      var msg_ids = [{% for msg in messages %}{% if not forloop.first %},{% endif %}{{ msg.id }}{% endfor %}];
+
+      var scrollToBottom = function (e) {
+        e.scrollTop = e.scrollHeight;
+      }
+
+      var tryScrollToBottom = function (e, threshold) {
+        if(e.scrollTop + e.clientHeight + threshold > e.scrollHeight) {
+          e.scrollTop = e.scrollHeight;
+        }
+      }
+
+      var appendLog = function (s) {
+        var log = $('#chat-log');
+        log.append(s + '<br>');
+        tryScrollToBottom(log.get(0), 50);
+      };
+
+      var startChat = function (user) {
+        console.log('user=[' + user + ']');
+
+        var log = $('#chat-log').get(0);
+        scrollToBottom(log);
+
+        var uri = '/events/?channel=room-' + encodeURIComponent('{{ room_id }}');
+        var es = new ReconnectingEventSource(uri, {
+          lastEventId: '{{ last_id }}'
+        });
+
+        var firstConnect = true;
+
+        es.onopen = function () {
+          if(!firstConnect) {
+            appendLog('*** connected');
+          }
+          firstConnect = false;
+        };
+
+        es.onerror = function () {
+          appendLog('*** connection lost, reconnecting...');
+        };
+
+        es.addEventListener('stream-reset', function () {
+          appendLog('*** client too far behind, please refresh');
+        }, false);
+
+        es.addEventListener('stream-error', function (e) {
+          // hard stop
+          es.close();
+          e = JSON.parse(e.data);
+          appendLog('*** stream error: ' + e.condition + ': ' + e.text);
+        }, false);
+
+        es.addEventListener('message', function (e) {
+          console.log('event: ' + e.data);
+          msg = JSON.parse(e.data);
+
+          // if an event arrives that was already in the initial pageload,
+          //   ignore it
+          if($.inArray(msg.id, msg_ids) != -1) {
+            return;
+          }
+
+          appendLog('<b>' + msg.from + '</b>: ' + msg.text);
+        }, false);
+
+        $('#send-form').submit(function () {
+          var text = $('#chat-input').val();
+
+          $('#chat-input').attr('disabled', 'true');
+          $('#send-button').attr('disabled', 'true');
+          $('#send-button').text('Sending...');
+          $('#join-elements').hide();
+          $.post('/rooms/{{ room_id }}/messages/', { from: user, text: text }
+          ).done(function (data) {
+            console.log('send response: ' + JSON.stringify(data));
+          }).fail(function () {
+            alert('failed to send message');
+          }).always(function () {
+            $('#chat-input').val('');
+            $('#send-button').text('Send');
+            $('#chat-input').removeAttr('disabled');
+            $('#send-button').removeAttr('disabled');
+            $('#chat-input').focus();
+          });
+
+          return false;
+        });
+
+        $('#chat-input').focus();
+      };
+
+      $(function () {
+        $('#chat-log').height(window.innerHeight - 64);
+
+{% if user %}
+        startChat('{{ user|escapejs }}');
+{% else %}
+        $('#join-form').submit(function () {
+          var user = $('#nick-input').val();
+
+          // switch from join view to chat view
+          $('#join-elements').hide();
+          $('#chat-elements').show();
+
+          startChat(user);
+
+          return false;
+        });
+
+        $('#nick-input').focus();
+{% endif %}
+      });
+    </script>
+  </head>
+
+  <body>
+    <header id="chat-header">
+      #chat
+    </header>
+
+{% if not user %}
+    <div id="join-elements">
+      <form id="join-form">
+        Nickname: <input type="text" id="nick-input" />
+        <button id="join-button">Join</button>
+      </form>
+    </div>
+{% endif %}
+
+    <div id="chat-elements">
+      <div id="chat-log">
+        {% for msg in messages %}
+          <b>{{ msg.from }}</b>: {{ msg.text }}<br />
+        {% endfor %}
+      </div>
+    </div>
+
+    <div id="chat-input-area">
+      <form id="send-form">
+        <button id="send-button">Send</button>
+        <span id="chat-input-span"><input type="text" id="chat-input" autocomplete="off" /></span>
+      </form>
+    </div>
+
+  </body>
+</html>
