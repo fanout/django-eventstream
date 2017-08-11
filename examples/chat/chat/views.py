@@ -16,8 +16,10 @@ def home(request, room_id=None):
 
 		try:
 			room = ChatRoom.objects.get(eid=room_id)
+			cmsgs = ChatMessage.objects.filter(
+				room=room).order_by('-date')[:50]
 			msgs = []
-			for msg in reversed(ChatMessage.objects.filter(room=room).order_by('-date')[:50]):
+			for msg in reversed(cmsgs):
 				msgs.append(msg.to_data())
 		except ChatRoom.DoesNotExist:
 			msgs = []
