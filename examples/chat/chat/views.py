@@ -34,7 +34,7 @@ def home(request, room_id=None):
 			context['room_id'] = room_id
 		else:
 			context['room_id'] = ''
-		return render(request, 'chat/home.html', context)
+		return render(request, 'chat/join.html', context)
 
 def messages(request, room_id):
 	if request.method == 'POST':
