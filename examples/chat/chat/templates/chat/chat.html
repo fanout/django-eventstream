@@ -63,24 +63,6 @@
       input#nick-input {
         width: 400px;
       }
-
-{% if user %}
-      div#join-elements {
-        display: none;
-      }
-{% else %}
-      div#chat-elements {
-        display: none;
-      }
-{% endif %}
-
-      /*div#chat-log {
-        display: block;
-        width: 600px;
-        height: 300px;
-        overflow: auto;
-        border: 2px solid black;
-      }*/
     </style>
 
     <script type="text/javascript">
@@ -179,40 +161,15 @@
       $(function () {
         $('#chat-log').height(window.innerHeight - 64);
 
-{% if user %}
         startChat('{{ user|escapejs }}');
-{% else %}
-        $('#join-form').submit(function () {
-          var user = $('#nick-input').val();
-
-          // switch from join view to chat view
-          $('#join-elements').hide();
-          $('#chat-elements').show();
-
-          startChat(user);
-
-          return false;
-        });
-
-        $('#nick-input').focus();
-{% endif %}
       });
     </script>
   </head>
 
   <body>
     <header id="chat-header">
-      #chat
+      #{{ room_id }}
     </header>
-
-{% if not user %}
-    <div id="join-elements">
-      <form id="join-form">
-        Nickname: <input type="text" id="nick-input" />
-        <button id="join-button">Join</button>
-      </form>
-    </div>
-{% endif %}
 
     <div id="chat-elements">
       <div id="chat-log">
