@@ -15,9 +15,15 @@
         width: 600px;
       }
 
+{% if user %}
+      div#join-elements {
+        display: none;
+      }
+{% else %}
       div#chat-elements {
         display: none;
       }
+{% endif %}
 
       div#chat-log {
         display: block;
@@ -29,6 +35,8 @@
     </style>
 
     <script type="text/javascript">
+      var msg_ids = [{% for msg in messages %}{% if not forloop.first %},{% endif %}{{ msg.id }}{% endfor %}];
+
       var scrollToBottom = function (e) {
         e.scrollTop = e.scrollHeight;
       }
@@ -45,89 +53,98 @@
         tryScrollToBottom(log.get(0), 50);
       };
 
-      $(function () {
-        var msg_ids = [{% for msg in messages %}{% if not forloop.first %},{% endif %}{{ msg.id }}{% endfor %}];
+      var startChat = function (user) {
+        console.log('user=[' + user + ']');
 
+        var log = $('#chat-log').get(0);
+        scrollToBottom(log);
+
+        var uri = '/events/?channel=room-' + encodeURIComponent('{{ room_id }}');
+        var es = new ReconnectingEventSource(uri, {
+          lastEventId: '{{ last_id }}'
+        });
+
+        var firstConnect = true;
+
+        es.onopen = function () {
+          if(!firstConnect) {
+            appendLog('*** connected');
+          }
+          firstConnect = false;
+        };
+
+        es.onerror = function () {
+          appendLog('*** connection lost, reconnecting...');
+        };
+
+        es.addEventListener('stream-reset', function () {
+          appendLog('*** client too far behind, please refresh');
+        }, false);
+
+        es.addEventListener('stream-error', function (e) {
+          // hard stop
+          es.close();
+          e = JSON.parse(e.data);
+          appendLog('*** stream error: ' + e.condition + ': ' + e.text);
+        }, false);
+
+        es.addEventListener('message', function (e) {
+          console.log('event: ' + e.data);
+          msg = JSON.parse(e.data);
+
+          // if an event arrives that was already in the initial pageload,
+          //   ignore it
+          if($.inArray(msg.id, msg_ids) != -1) {
+            return;
+          }
+
+          appendLog('<b>' + msg.from + '</b>: ' + msg.text);
+        }, false);
+
+        $('#send-form').submit(function () {
+          var text = $('#chat-input').val();
+
+          $('#chat-input').attr('disabled', 'true');
+          $('#send-button').attr('disabled', 'true');
+          $('#send-button').text('Sending...');
+          $('#join-elements').hide();
+          $.post('/rooms/{{ room_id }}/messages/', { from: user, text: text }
+          ).done(function (data) {
+            console.log('send response: ' + JSON.stringify(data));
+          }).fail(function () {
+            alert('failed to send message');
+          }).always(function () {
+            $('#chat-input').val('');
+            $('#send-button').text('Send');
+            $('#chat-input').removeAttr('disabled');
+            $('#send-button').removeAttr('disabled');
+            $('#chat-input').focus();
+          });
+
+          return false;
+        });
+
+        $('#chat-input').focus();
+      };
+
+      $(function () {
+{% if user %}
+        startChat('{{ user|escapejs }}');
+{% else %}
         $('#join-form').submit(function () {
-          var nick = $('#nick-input').val();
+          var user = $('#nick-input').val();
 
           // switch from join view to chat view
           $('#join-elements').hide();
           $('#chat-elements').show();
 
-          var log = $('#chat-log').get(0);
-          scrollToBottom(log);
-
-          var es = new ReconnectingEventSource('/events/?channel=chat', {
-            lastEventId: '{{ last_id }}'
-          });
-
-          var firstConnect = true;
-
-          es.onopen = function () {
-            if(!firstConnect) {
-              appendLog('*** connected');
-            }
-            firstConnect = false;
-          };
-
-          es.onerror = function () {
-            appendLog('*** connection lost, reconnecting...');
-          };
-
-          es.addEventListener('stream-reset', function () {
-            appendLog('*** client too far behind, please refresh');
-          }, false);
-
-          es.addEventListener('stream-error', function (e) {
-            // hard stop
-            es.close();
-            e = JSON.parse(e.data);
-            appendLog('*** stream error: ' + e.condition + ': ' + e.text);
-          }, false);
-
-          es.addEventListener('message', function (e) {
-            console.log('event: ' + e.data);
-            msg = JSON.parse(e.data);
-
-            // if an event arrives that was already in the initial pageload,
-            //   ignore it
-            if($.inArray(msg.id, msg_ids) != -1) {
-              return;
-            }
-
-            appendLog('<b>' + msg.from + '</b>: ' + msg.text);
-          }, false);
-
-          $('#send-form').submit(function () {
-            var text = $('#chat-input').val();
-
-            $('#chat-input').attr('disabled', 'true');
-            $('#send-button').attr('disabled', 'true');
-            $('#send-button').text('Sending...');
-            $('#join-elements').hide();
-            $.post('/messages/', { from: nick, text: text }
-            ).done(function (data) {
-              console.log('send response: ' + JSON.stringify(data));
-            }).fail(function () {
-              alert('failed to send message');
-            }).always(function () {
-              $('#chat-input').val('');
-              $('#send-button').text('Send');
-              $('#chat-input').removeAttr('disabled');
-              $('#send-button').removeAttr('disabled');
-              $('#chat-input').focus();
-            });
-
-            return false;
-          });
-
-          $('#chat-input').focus();
+          startChat(user);
 
           return false;
         });
 
         $('#nick-input').focus();
+{% endif %}
       });
     </script>
   </head>
@@ -135,12 +152,14 @@
   <body>
     <h1>Chat</h1>
 
+{% if not user %}
     <div id="join-elements">
       <form id="join-form">
         Nickname: <input type="text" id="nick-input" />
         <button id="join-button">Join</button>
       </form>
     </div>
+{% endif %}
 
     <div id="chat-elements">
       <div id="chat-log">
