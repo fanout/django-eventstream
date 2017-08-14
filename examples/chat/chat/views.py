@@ -14,6 +14,8 @@ def home(request, room_id=None):
 		if not room_id:
 			room_id = 'default'
 
+		last_id = get_current_event_id(['room-%s' % room_id])
+
 		try:
 			room = ChatRoom.objects.get(eid=room_id)
 			cmsgs = ChatMessage.objects.filter(
@@ -26,7 +28,7 @@ def home(request, room_id=None):
 
 		context = {}
 		context['room_id'] = room_id
-		context['last_id'] = get_current_event_id(['room-%s' % room_id])
+		context['last_id'] = last_id
 		context['messages'] = msgs
 		context['user'] = user
 		return render(request, 'chat/chat.html', context)
