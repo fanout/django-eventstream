@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import json
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.db import IntegrityError, transaction
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django_eventstream import send_event, get_current_event_id
 from .models import ChatRoom, ChatMessage
 
@@ -12,7 +12,7 @@ def home(request, room_id=None):
 	user = request.GET.get('user')
 	if user:
 		if not room_id:
-			room_id = 'default'
+			return redirect('/default?' + request.GET.urlencode())
 
 		last_id = get_current_event_id(['room-%s' % room_id])
 
@@ -34,10 +34,7 @@ def home(request, room_id=None):
 		return render(request, 'chat/chat.html', context)
 	else:
 		context = {}
-		if room_id:
-			context['room_id'] = room_id
-		else:
-			context['room_id'] = ''
+		context['room_id'] = room_id or 'default'
 		return render(request, 'chat/join.html', context)
 
 def messages(request, room_id):
