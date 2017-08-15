@@ -138,7 +138,6 @@
           $('#chat-input').attr('disabled', 'true');
           $('#send-button').attr('disabled', 'true');
           $('#send-button').text('Sending...');
-          $('#join-elements').hide();
           $.post('/rooms/{{ room_id }}/messages/', { from: user, text: text }
           ).done(function (data) {
             console.log('send response: ' + JSON.stringify(data));
