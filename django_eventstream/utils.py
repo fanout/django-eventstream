@@ -5,6 +5,7 @@ import six
 from werkzeug.http import parse_options_header
 from django.conf import settings
 from django.http import HttpResponse
+from django.core.serializers.json import DjangoJSONEncoder
 from gripcontrol import HttpStreamFormat
 from django_grip import publish
 
@@ -49,7 +50,7 @@ def sse_encode_event(event_type, data, event_id=None):
 	out = 'event: %s\n' % event_type
 	if event_id:
 		out += 'id: %s\n' % event_id
-	out += 'data: %s\n\n' % json.dumps(data)
+	out += 'data: %s\n\n' % json.dumps(data, cls=DjangoJSONEncoder)
 	return out
 
 def sse_error_response(condition, text, extra={}):
