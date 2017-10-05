@@ -1,5 +1,5 @@
 import os
-import urlparse
+from six.moves.urllib_parse import urlparse
 import requests
 from django.contrib.staticfiles.management.commands import runserver
 from django_grip import get_pubcontrol
@@ -17,7 +17,7 @@ class Command(runserver.Command):
 		tunnels = resp.json()['tunnels']
 		for tunnel in tunnels:
 			if tunnel['proto'] in ('http', 'https'):
-				parsed = urlparse.urlparse(tunnel['public_url'])
+				parsed = urlparse(tunnel['public_url'])
 				if tunnel['proto'] == 'http':
 					host = parsed.hostname
 					port = parsed.port if parsed.port is not None else 80
