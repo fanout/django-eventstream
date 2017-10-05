@@ -99,6 +99,8 @@ from django_eventstream import send_event
 send_event('test', 'message', {'text': 'hello world'})
 ```
 
+The first argument is the channel to send on, the second is the event type, and the third is the event data. The data will be JSON-encoded using `DjangoJSONEncoder`.
+
 ## Local development
 
 If you're developing locally and want to test with Fanout Cloud, we recommend using [ngrok](https://ngrok.com/) to register a public host that routes to your local instance.
