@@ -2,6 +2,7 @@ import sys
 import json
 import datetime
 from django.utils import timezone
+from django.core.serializers.json import DjangoJSONEncoder
 from .event import Event
 
 is_python3 = sys.version_info >= (3,)
@@ -24,7 +25,7 @@ class DjangoModelStorage(object):
 		db_event = models.Event(
 			channel=channel,
 			type=event_type,
-			data=json.dumps(data))
+			data=json.dumps(data, cls=DjangoJSONEncoder))
 		db_event.save()
 
 		self.trim_event_log()
