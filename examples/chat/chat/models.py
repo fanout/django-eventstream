@@ -16,6 +16,6 @@ class ChatMessage(models.Model):
 		out = {}
 		out['id'] = self.id
 		out['from'] = self.user
-		out['date'] = self.date.isoformat()
+		out['date'] = self.date
 		out['text'] = self.text
 		return out

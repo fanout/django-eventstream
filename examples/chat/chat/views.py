@@ -5,6 +5,7 @@ import json
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.db import IntegrityError, transaction
 from django.shortcuts import render, redirect
+from django.core.serializers.json import DjangoJSONEncoder
 from django_eventstream import send_event, get_current_event_id
 from .models import ChatRoom, ChatMessage
 
@@ -55,7 +56,7 @@ def messages(request, room_id):
 			msg = ChatMessage(room=room, user=mfrom, text=text)
 			msg.save()
 			send_event('room-%s' % room_id, 'message', msg.to_data())
-		body = json.dumps(msg.to_data())
+		body = json.dumps(msg.to_data(), cls=DjangoJSONEncoder)
 		return HttpResponse(body, content_type='application/json')
 	else:
 		return HttpResponseNotAllowed(['POST'])
