@@ -1,8 +1,13 @@
 import os
 from six.moves.urllib_parse import urlparse
 import requests
-from django.contrib.staticfiles.management.commands import runserver
 from django_grip import get_pubcontrol
+from django.apps import apps
+if apps.is_installed('django.contrib.staticfiles'):
+	from django.contrib.staticfiles.management.commands import runserver
+else:
+	from django.core.management.commands import runserver
+
 
 class Command(runserver.Command):
 	help = 'Set ngrok tunnel as origin for GRIP service, then invoke runserver'
