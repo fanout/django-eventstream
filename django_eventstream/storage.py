@@ -18,7 +18,17 @@ class EventDoesNotExist(Exception):
 		super(Exception, self).__init__(message)
 		self.current_id = current_id
 
-class DjangoModelStorage(object):
+class StorageBase(object):
+	def append_event(self, channel, event_type, data):
+		raise NotImplementedError()
+
+	def get_events(self, channel, last_id, limit=100):
+		raise NotImplementedError()
+
+	def get_current_id(self, channel):
+		raise NotImplementedError()
+
+class DjangoModelStorage(StorageBase):
 	def append_event(self, channel, event_type, data):
 		from . import models
 
