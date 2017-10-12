@@ -1,7 +1,7 @@
 import copy
 import six
 from django.http import HttpResponse
-from .utils import sse_encode_event, make_id
+from .utils import sse_encode_event, make_id, build_id_escape
 
 try:
 	from urllib import quote
@@ -85,7 +85,7 @@ class EventResponse(object):
 			id_parts = []
 			for channel in six.iterkeys(last_ids):
 				enc_channel = quote(channel)
-				id_parts.append('%s:%%(events-%s)s' % (enc_channel, enc_channel))
+				id_parts.append('%s:%%(events-%s)s' % (build_id_escape(enc_channel), enc_channel))
 			id_format = ','.join(id_parts)
 			set_meta_header += 'id_format="%s"' % id_format
 
