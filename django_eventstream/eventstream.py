@@ -2,7 +2,7 @@ import copy
 from .storage import EventDoesNotExist
 from .eventresponse import EventResponse
 from .utils import make_id, publish_event, publish_kick, \
-	get_storage, get_authorizer
+	get_storage, get_channelmanager
 
 class EventPermissionError(Exception):
 	def __init__(self, message, channels=[]):
@@ -11,8 +11,9 @@ class EventPermissionError(Exception):
 
 def send_event(channel, event_type, data, skip_user_ids=[]):
 	storage = get_storage()
+	channelmanager = get_channelmanager()
 
-	if storage:
+	if channelmanager.is_channel_reliable(channel) and storage:
 		e = storage.append_event(channel, event_type, data)
 		pub_id = str(e.id)
 		pub_prev_id = str(e.id - 1)
@@ -42,11 +43,11 @@ def get_events(request, limit=100, user=None):
 		limit_per_type = 1
 
 	storage = get_storage()
-	authorizer = get_authorizer()
+	channelmanager = get_channelmanager()
 
 	inaccessible_channels = []
 	for channel in request.channels:
-		if not authorizer.can_read_channel(user, channel):
+		if not channelmanager.can_read_channel(user, channel):
 			inaccessible_channels.append(channel)
 
 	if len(inaccessible_channels) > 0:
@@ -60,7 +61,7 @@ def get_events(request, limit=100, user=None):
 		last_id = request.channel_last_ids.get(channel)
 		more = False
 
-		if storage:
+		if channelmanager.is_channel_reliable(channel) and storage:
 			if last_id is not None:
 				try:
 					events = storage.get_events(
@@ -100,7 +101,7 @@ def get_current_event_id(channels):
 	return make_id(cur_ids)
 
 def channel_permission_changed(user, channel):
-	authorizer = get_authorizer()
-	if not authorizer.can_read_channel(user, channel):
+	channelmanager = get_channelmanager()
+	if not channelmanager.can_read_channel(user, channel):
 		user_id = user.id if user else 'anonymous'
 		publish_kick(user_id, channel)

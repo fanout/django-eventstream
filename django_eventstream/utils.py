@@ -123,12 +123,7 @@ def get_class_from_setting(setting_name, default=None):
 def get_storage():
 	return get_class_from_setting('EVENTSTREAM_STORAGE_CLASS')
 
-def get_authorizer():
+def get_channelmanager():
 	return get_class_from_setting(
-		'EVENTSTREAM_AUTHORIZER_CLASS',
-		'django_eventstream.authorizer.DefaultAuthorizer')
-
-def get_requestmapper():
-	return get_class_from_setting(
-		'EVENTSTREAM_REQUESTMAPPER_CLASS',
-		'django_eventstream.requestmapper.DefaultRequestMapper')
+		'EVENTSTREAM_CHANNELMANAGER_CLASS',
+		'django_eventstream.channelmanager.DefaultChannelManager')

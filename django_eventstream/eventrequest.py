@@ -1,5 +1,5 @@
 import six
-from .utils import parse_grip_last, parse_last_event_id, get_requestmapper
+from .utils import parse_grip_last, parse_last_event_id, get_channelmanager
 
 try:
 	from urllib import unquote
@@ -30,8 +30,8 @@ class EventRequest(object):
 		is_next = False
 		is_recover = False
 
-		mapper = get_requestmapper()
-		channels = mapper.get_channels_for_request(http_request, view_kwargs)
+		channelmanager = get_channelmanager()
+		channels = channelmanager.get_channels_for_request(http_request, view_kwargs)
 
 		if len(channels) < 1:
 			raise EventRequest.Error('No channels specified')
