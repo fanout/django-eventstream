@@ -125,4 +125,4 @@ STATIC_URL = '/static/'
 GRIP_URL = os.environ.get('GRIP_URL')
 
 EVENTSTREAM_STORAGE_CLASS = 'django_eventstream.storage.DjangoModelStorage'
-EVENTSTREAM_AUTHORIZER_CLASS = 'demo.views.MyAuthorizer'
+EVENTSTREAM_AUTHORIZER_CLASS = 'basic.views.MyAuthorizer'
