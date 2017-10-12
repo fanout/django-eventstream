@@ -148,6 +148,8 @@ EVENTSTREAM_STORAGE_CLASS = 'django_eventstream.storage.DjangoModelStorage'
 
 That's all you need to do. When storage is enabled, events are written to the database before they are published, and they persist for 24 hours. If clients get disconnected, Pushpin or Fanout Cloud goes down, or your own server goes down or crashes at any time, even mid-publish, the stream will automatically be repaired.
 
+To enable storage selectively by channel, implement a channel manager and override `is_channel_reliable`.
+
 ## Receiving in the browser
 
 Include client libraries on the frontend:
@@ -173,10 +175,12 @@ es.addEventListener('stream-reset', function (e) {
 
 ## Authorization
 
-Declare authorizer class with your authorization logic:
+Declare a channel manager class with your authorization logic:
 
 ```py
-class MyAuthorizer(object):
+from django_eventstream.channelmanager import DefaultChannelManager
+
+class MyChannelManager(DefaultChannelManager):
     def can_read_channel(self, user, channel):
         # require auth for prefixed channels
         if channel.startswith('_') and user is None:
@@ -187,7 +191,7 @@ class MyAuthorizer(object):
 Configure `settings.py` to use it:
 
 ```py
-EVENTSTREAM_AUTHORIZER_CLASS = 'myapp.authorizer.MyAuthorizer'
+EVENTSTREAM_CHANNELMANAGER_CLASS = 'myapp.channelmanager.MyChannelManager'
 ```
 
 Whenever permissions change, call `channel_permission_changed`. This will cause clients to be disconnected if they lost permission to the channel.
@@ -196,3 +200,27 @@ Whenever permissions change, call `channel_permission_changed`. This will cause 
 from django_eventstream import channel_permission_changed
 
 channel_permission_changed(user, '_mychannel')
+```
+
+## Selecting channels
+
+By default, the client selects the channels to listen to by providing one or more `channel` query parameters in the HTTP request. Alternatively, it is possible to use Django view keyword arguments to select the channels. Examples:
+
+```py
+# client selects the channels using query parameters:
+url(r'^events/', include(django_eventstream.urls))
+
+# client selects a single channel using a path component
+url(r'^events/(?P<channel>\w+)/', include(django_eventstream.urls))
+
+# server selects the channels
+url(r'^foo/events/', include(django_eventstream.urls), {'channels':['foo']})
+
+# server selects the channels using formatting based on the view keywords
+url(r'^objects/(?P<obj_id>\w+)/events/', include(django_eventstream.urls),
+    {'format-channels':['object-{obj_id}']})
+```
+
+Note that if view keywords are used, the client cannot use query parameters to select channels.
+
+If even more advanced channel mapping is needed, implement a channel manager and override `get_channels_for_request`.
