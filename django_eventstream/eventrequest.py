@@ -1,5 +1,5 @@
 import six
-from .utils import parse_grip_last, parse_last_event_id
+from .utils import parse_grip_last, parse_last_event_id, get_requestmapper
 
 try:
 	from urllib import unquote
@@ -16,19 +16,22 @@ class EventRequest(object):
 	class ResumeNotAllowedError(Error):
 		pass
 
-	def __init__(self, http_request=None, channel_limit=10):
+	def __init__(self, http_request=None, channel_limit=10, view_kwargs={}):
 		self.channels = set()
 		self.channel_last_ids = {}
 		self.is_recover = False
 
 		if http_request:
 			self.apply_http_request(http_request,
-				channel_limit=channel_limit)
+				channel_limit=channel_limit,
+				view_kwargs=view_kwargs)
 
-	def apply_http_request(self, http_request, channel_limit):
-		channels = set(http_request.GET.getlist('channel'))
+	def apply_http_request(self, http_request, channel_limit, view_kwargs):
 		is_next = False
 		is_recover = False
+
+		mapper = get_requestmapper()
+		channels = mapper.get_channels_for_request(http_request, view_kwargs)
 
 		if len(channels) < 1:
 			raise EventRequest.Error('No channels specified')

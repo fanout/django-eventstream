@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.http import HttpResponseBadRequest
 
-def events(request):
+def events(request, **kwargs):
 	from .eventrequest import EventRequest
 	from .eventstream import EventPermissionError, get_events
 	from .utils import sse_error_response
@@ -14,7 +14,7 @@ def events(request):
 		user = request.user
 
 	try:
-		event_request = EventRequest(request)
+		event_request = EventRequest(request, view_kwargs=kwargs)
 		event_response = get_events(event_request, user=user)
 		response = event_response.to_http_response(request)
 	except EventRequest.ResumeNotAllowedError as e:

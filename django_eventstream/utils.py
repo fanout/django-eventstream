@@ -127,3 +127,8 @@ def get_authorizer():
 	return get_class_from_setting(
 		'EVENTSTREAM_AUTHORIZER_CLASS',
 		'django_eventstream.authorizer.DefaultAuthorizer')
+
+def get_requestmapper():
+	return get_class_from_setting(
+		'EVENTSTREAM_REQUESTMAPPER_CLASS',
+		'django_eventstream.requestmapper.DefaultRequestMapper')
