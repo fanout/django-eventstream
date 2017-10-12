@@ -71,7 +71,7 @@ def publish_event(channel, event_type, data, pub_id, pub_prev_id,
 	if skip_user_ids:
 		meta['skip_users'] = ','.join(skip_user_ids)
 	publish(
-		'events-%s' % channel,
+		'events-%s' % quote(channel),
 		HttpStreamFormat(content),
 		id=pub_id,
 		prev_id=pub_prev_id,
