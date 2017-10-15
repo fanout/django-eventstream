@@ -42,7 +42,8 @@ class EventResponse(object):
 				body += sse_encode_event(
 					item.type,
 					item.data,
-					event_id=event_id)
+					event_id=event_id,
+					escape=True)
 
 		resp = HttpResponse(body, content_type='text/event-stream')
 
