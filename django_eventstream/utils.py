@@ -75,8 +75,10 @@ def sse_error_response(condition, text, extra={}):
 
 def publish_event(channel, event_type, data, pub_id, pub_prev_id,
 		skip_user_ids=[]):
+	content_filters = []
 	if pub_id:
 		event_id = '%I'
+		content_filters.append('build-id')
 	else:
 		event_id = None
 	content = sse_encode_event(event_type, data, event_id=event_id, escape=bool(pub_id))
@@ -85,7 +87,7 @@ def publish_event(channel, event_type, data, pub_id, pub_prev_id,
 		meta['skip_users'] = ','.join(skip_user_ids)
 	publish(
 		'events-%s' % quote(channel),
-		HttpStreamFormat(content),
+		HttpStreamFormat(content, content_filters=content_filters),
 		id=pub_id,
 		prev_id=pub_prev_id,
 		meta=meta)
