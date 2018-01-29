@@ -39,7 +39,23 @@ def home(request, room_id=None):
 		return render(request, 'chat/join.html', context)
 
 def messages(request, room_id):
-	if request.method == 'POST':
+	if request.method == 'GET':
+		last_id = get_current_event_id(['room-%s' % room_id])
+
+		try:
+			room = ChatRoom.objects.get(eid=room_id)
+			cmsgs = ChatMessage.objects.filter(
+				room=room).order_by('-date')[:50]
+			msgs = [msg.to_data() for msg in cmsgs]
+		except ChatRoom.DoesNotExist:
+			msgs = []
+
+		body = json.dumps({
+			'messages': msgs,
+			'last-event-id': last_id
+		}, cls=DjangoJSONEncoder) + '\n'
+		return HttpResponse(body, content_type='application/json')
+	elif request.method == 'POST':
 		try:
 			room = ChatRoom.objects.get(eid=room_id)
 		except ChatRoom.DoesNotExist:
@@ -56,7 +72,7 @@ def messages(request, room_id):
 			msg = ChatMessage(room=room, user=mfrom, text=text)
 			msg.save()
 			send_event('room-%s' % room_id, 'message', msg.to_data())
-		body = json.dumps(msg.to_data(), cls=DjangoJSONEncoder)
+		body = json.dumps(msg.to_data(), cls=DjangoJSONEncoder) + '\n'
 		return HttpResponse(body, content_type='application/json')
 	else:
 		return HttpResponseNotAllowed(['POST'])
