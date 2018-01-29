@@ -68,3 +68,44 @@ python manage.py runserver
 ```
 
 Then open up two browser windows to [http://localhost:7999/](http://localhost:7999/).
+
+## API
+
+### Get past messages:
+
+```http
+GET /rooms/{room-id}/messages/
+```
+
+Params: (None)
+
+Returns: JSON object, with fields:
+
+* `messages`: list of the most recent messages, in time descending order
+* `last-event-id`: last event ID (use this when listening for events)
+
+### Send message:
+
+```http
+POST /rooms/{room-id}/messages/
+```
+
+Params:
+
+* `from={string}`: the name of the user sending the message
+* `text={string}`: the content of the message
+
+Returns: JSON object of message
+
+### Get events:
+
+```http
+GET /events/
+```
+
+Params:
+
+* `channel`: events channel to listen to, using the form `room-{room-id}`. can be specified more than once to listen to events of multiple rooms
+* `lastEventId`: event ID to start reading from (optional)
+
+Returns: SSE stream
