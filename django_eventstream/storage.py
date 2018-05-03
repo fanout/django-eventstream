@@ -65,6 +65,8 @@ class DjangoModelStorage(StorageBase):
 		if last_id == cur_id:
 			return []
 
+		# look up the referenced event first, to avoid a range query when
+		#   the referenced event doesn't exist
 		try:
 			models.Event.objects.get(
 				channel=channel,
@@ -74,17 +76,19 @@ class DjangoModelStorage(StorageBase):
 				'No such event %d' % last_id,
 				cur_id)
 
-		# increase limit by 1 since we ignore the first result
+		# increase limit by 1 since we'll exclude the first result
 		db_events = models.Event.objects.filter(
 			channel=channel,
 			eid__gte=last_id
 		).order_by('eid')[:limit + 1]
 
+		# ensure the first result matches the referenced event
 		if len(db_events) == 0 or db_events[0].eid != last_id:
 			raise EventDoesNotExist(
 				'No such event %d' % last_id,
 				cur_id)
 
+		# exclude the first result
 		db_events = db_events[1:]
 
 		out = []
