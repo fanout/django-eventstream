@@ -41,10 +41,9 @@ def events(request, **kwargs):
 
 	response['Cache-Control'] = 'no-cache'
 
+	cors_origin = ''
 	if hasattr(settings, 'EVENTSTREAM_ALLOW_ORIGIN'):
 		cors_origin = settings.EVENTSTREAM_ALLOW_ORIGIN
-	else:
-		cors_origin = request.META.get('HTTP_HOST')
 
 	if cors_origin:
 		response['Access-Control-Allow-Origin'] = cors_origin
