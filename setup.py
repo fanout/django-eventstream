@@ -17,6 +17,8 @@ zip_safe=False,
 packages=['django_eventstream', 'django_eventstream.migrations', 'django_eventstream.management', 'django_eventstream.management.commands'],
 package_data={'django_eventstream': ['static/django_eventstream/*']},
 install_requires=['gripcontrol>=3.1.0,<4', 'django_grip>=1.7,<2', 'Werkzeug>=0.12,<1', 'six>=1.10,<2'],
+tests_require=['Django'],
+test_suite = "tests.runtests.runtests",
 classifiers=[
 	'Development Status :: 4 - Beta',
 	'Topic :: Utilities',
