@@ -35,13 +35,14 @@ class Event(models.Model):
 			counter = EventCounter.get_or_create(self.channel)
 
 			with transaction.atomic():
+				counter = EventCounter.objects.select_for_update(
+					).get(id=counter.id)
+
 				if counter.value == 0:
 					# insert placeholder to enable querying from ID 0
 					zero_event = Event(channel=self.channel)
 					super(Event, zero_event).save()
 
-				counter = EventCounter.objects.select_for_update(
-					).get(id=counter.id)
 				self.eid = counter.value + 1
 
 				try:
