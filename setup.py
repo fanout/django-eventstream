@@ -6,7 +6,7 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md')) as f:
 
 setup(
 name='django-eventstream',
-version='2.0.1',
+version='2.0.2',
 description='Django EventStream library',
 long_description=readme,
 author='Justin Karneges',
