@@ -26,7 +26,7 @@ class EventResponse(object):
 		body = ''
 
 		if not self.is_next:
-			body += ':' + (' ' * 2048) + '\n'
+			body += ':' + (' ' * 2048) + '\n\n'
 			body += 'event: stream-open\ndata:\n\n'
 
 		if len(self.channel_reset) > 0:
