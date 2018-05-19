@@ -16,6 +16,13 @@ except ImportError:
 
 tlocal = threading.local()
 
+def have_channels():
+	try:
+		from channels.generic.http import AsyncHttpConsumer
+		return True
+	except ImportError:
+		return False
+
 # return dict of (channel, last-id)
 def parse_grip_last(s):
 	parsed = parse_options_header(s, multiple=True)

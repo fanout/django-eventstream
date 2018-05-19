@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+from django_eventstream.utils import have_channels
 
 # Application definition
 
@@ -37,9 +38,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+]
+
+if have_channels():
+    INSTALLED_APPS.append('channels')
+
+INSTALLED_APPS.extend([
     'django_eventstream',
     'basic',
-]
+])
 
 MIDDLEWARE = [
     'django_grip.GripMiddleware',
@@ -121,6 +128,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+ASGI_APPLICATION = 'server.routing.application'
 
 GRIP_URL = os.environ.get('GRIP_URL')
 

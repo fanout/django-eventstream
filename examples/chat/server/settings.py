@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+from django_eventstream.utils import have_channels
 
 # Application definition
 
@@ -37,9 +38,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+]
+
+if have_channels():
+    INSTALLED_APPS.append('channels')
+
+INSTALLED_APPS.extend([
     'django_eventstream',
     'chat',
-]
+])
 
 MIDDLEWARE = [
     'django_grip.GripMiddleware',
@@ -120,6 +127,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = 'staticfiles'
+
+ASGI_APPLICATION = 'server.routing.application'
 
 GRIP_URL = os.environ.get('GRIP_URL')
 

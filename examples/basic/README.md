@@ -1,27 +1,24 @@
-Install dependencies:
+# Basic example
+
+Sends the current time over a stream.
+
+Install dependencies, setup database, and create empty environment config:
 
 ```sh
-virtualenv venv
+virtualenv --python=python3 venv
 . venv/bin/activate
 pip install -r requirements.txt
+pip install channels
+python manage.py migrate
+touch .env
 ```
 
 Note: The `django_eventstream` library doesn't get installed and instead is loaded from within this repository by relative path.
 
-GRIP configuration:
+Run:
 
 ```sh
-cat "GRIP_URL=http://api.fanout.io/realm/your-realm?iss=your-realm&key=base64:your-realm-key" > .env
+python manage.py runserver
 ```
 
-Run ngrok:
-
-```sh
-ngrok http 8000
-```
-
-Run the server:
-
-```sh
-python manage.py runserver_ngrok
-```
+Open browser to http://localhost:8000/

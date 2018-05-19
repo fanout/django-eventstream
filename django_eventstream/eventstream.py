@@ -2,7 +2,7 @@ import copy
 from .storage import EventDoesNotExist
 from .eventresponse import EventResponse
 from .utils import make_id, publish_event, publish_kick, \
-	get_storage, get_channelmanager
+	get_storage, get_channelmanager, have_channels
 
 class EventPermissionError(Exception):
 	def __init__(self, message, channels=[]):
@@ -10,6 +10,8 @@ class EventPermissionError(Exception):
 		self.channels = copy.deepcopy(channels)
 
 def send_event(channel, event_type, data, skip_user_ids=[]):
+	from .event import Event
+
 	storage = get_storage()
 	channelmanager = get_channelmanager()
 
@@ -18,9 +20,16 @@ def send_event(channel, event_type, data, skip_user_ids=[]):
 		pub_id = str(e.id)
 		pub_prev_id = str(e.id - 1)
 	else:
+		e = Event(channel, event_type, data)
 		pub_id = None
 		pub_prev_id = None
 
+	if have_channels():
+		from .consumers import get_listener_manager
+		# send to local listeners
+		get_listener_manager().add_to_queues(channel, e)
+
+	# publish through grip proxy
 	publish_event(
 		channel,
 		event_type,
@@ -104,4 +113,11 @@ def channel_permission_changed(user, channel):
 	channelmanager = get_channelmanager()
 	if not channelmanager.can_read_channel(user, channel):
 		user_id = user.id if user else 'anonymous'
+
+		if have_channels():
+			from .consumers import get_listener_manager
+			# kick local listeners
+			get_listener_manager().kick(user_id, channel)
+
+		# kick users connected to grip proxy
 		publish_kick(user_id, channel)

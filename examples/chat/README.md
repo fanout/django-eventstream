@@ -1,8 +1,6 @@
 # Chat
 
-Simple web chat app.
-
-Server is a Django app (using Django-EventStream). Updates are sent over Fanout Cloud or Pushpin.
+Simple web chat app using EventStream.
 
 There is a public instance available here: [http://chat.fanoutapp.com](http://chat.fanoutapp.com).
 
@@ -10,22 +8,30 @@ There are [iOS](https://github.com/fanout/chat-demo-ios) and [Android](https://g
 
 ## Usage
 
-Install dependencies and setup database:
+Install dependencies, setup database, and create empty environment config:
 
 ```sh
-virtualenv venv
+virtualenv --python=python3 venv
 . venv/bin/activate
 pip install -r requirements.txt
+pip install channels
 python manage.py migrate
+touch .env
 ```
 
-The `django_eventstream` library doesn't get installed and instead is loaded from within this repository by relative path.
+Note: The `django_eventstream` library doesn't get installed and instead is loaded from within this repository by relative path.
 
-Note: default storage is sqlite.
+Run:
+
+```sh
+python manage.py runserver
+```
+
+Open browser to http://localhost:8000/
 
 ### Running with Fanout Cloud
 
-Create a `.env` file containing `GRIP_URL`:
+Set `GRIP_URL` in your `.env`:
 
 ```sh
 GRIP_URL=https://api.fanout.io/realm/{realm-id}?iss={realm-id}&key=base64:{realm-key}
@@ -47,11 +53,11 @@ python manage.py runserver_ngrok
 
 The `runserver_ngrok` command automatically sets the ngrok tunnel as your Fanout Cloud domain's Origin Server.
 
-Then open up two browser windows to your Fanout Cloud domain (e.g. https://{realm-id}.fanoutcdn.com/). Requests made to Fanout Cloud should be routed through ngrok to the local instance.
+Open browser to your Fanout Cloud domain (e.g. `https://{realm-id}.fanoutcdn.com/`). Requests made to Fanout Cloud should be routed through ngrok to the local instance.
 
 ### Running with Pushpin
 
-Create a `.env` file containing `GRIP_URL`:
+Set `GRIP_URL` in your `.env`:
 
 ```sh
 GRIP_URL=http://localhost:5561
@@ -69,7 +75,7 @@ Run the server:
 python manage.py runserver
 ```
 
-Then open up two browser windows to [http://localhost:7999/](http://localhost:7999/).
+Open browser to http://localhost:7999/
 
 ## API
 

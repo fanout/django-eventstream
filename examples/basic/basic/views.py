@@ -1,5 +1,8 @@
+import time
+import threading
+import datetime
 from django.shortcuts import render
-from django_eventstream import get_current_event_id
+from django_eventstream import get_current_event_id, send_event
 from django_eventstream.channelmanager import DefaultChannelManager
 
 class MyChannelManager(DefaultChannelManager):
@@ -13,8 +16,19 @@ class MyChannelManager(DefaultChannelManager):
 			return False
 		return True
 
+def _send_worker():
+	while True:
+		data = datetime.datetime.utcnow().isoformat()
+		for channel in ['test', '~test']:
+			send_event(channel, 'message', data)
+		time.sleep(1)
+
 def home(request):
 	context = {}
 	context['url'] = '/events/?channel=test'
 	context['last_id'] = get_current_event_id(['test'])
 	return render(request, 'basic/home.html', context)
+
+send_thread = threading.Thread(target=_send_worker)
+send_thread.daemon = True
+send_thread.start()
