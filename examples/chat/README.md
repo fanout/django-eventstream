@@ -6,6 +6,8 @@ Server is a Django app (using Django-EventStream). Updates are sent over Fanout 
 
 There is a public instance available here: [http://chat.fanoutapp.com](http://chat.fanoutapp.com).
 
+There are [iOS](https://github.com/fanout/chat-demo-ios) and [Android](https://github.com/fanout/chat-demo-android) demo clients.
+
 ## Usage
 
 Install dependencies and setup database:
