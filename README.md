@@ -50,7 +50,7 @@ For Python versions earlier than 3.5, see [Setup without Channels](#setup-withou
 
 ### Setup with Channels
 
-Install modules:
+First, install this module:
 
 ```sh
 pip install django-eventstream
