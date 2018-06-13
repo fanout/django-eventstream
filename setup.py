@@ -14,7 +14,7 @@ install_requires.extend(['gripcontrol>=3.1.0,<4', 'django_grip>=1.7,<2', 'Werkze
 
 setup(
 name='django-eventstream',
-version='2.0.2',
+version='2.1.0',
 description='Server-Sent Events for Django',
 long_description=readme,
 author='Justin Karneges',
