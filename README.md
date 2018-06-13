@@ -53,7 +53,7 @@ For Python versions earlier than 3.5, see [Setup without Channels](#setup-withou
 Install modules:
 
 ```sh
-pip install channels django-eventstream
+pip install django-eventstream
 ```
 
 Add the `channels` and `django_eventstream` apps to your `settings.py`:

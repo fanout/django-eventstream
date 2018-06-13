@@ -14,7 +14,6 @@ Install dependencies, setup database, and create empty environment config:
 virtualenv --python=python3 venv
 . venv/bin/activate
 pip install -r requirements.txt
-pip install channels
 python manage.py migrate
 touch .env
 ```
