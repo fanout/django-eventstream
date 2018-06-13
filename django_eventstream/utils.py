@@ -7,7 +7,6 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.core.serializers.json import DjangoJSONEncoder
 from gripcontrol import HttpStreamFormat
-from django_grip import publish
 
 try:
 	from urllib import quote
@@ -82,6 +81,8 @@ def sse_error_response(condition, text, extra={}):
 
 def publish_event(channel, event_type, data, pub_id, pub_prev_id,
 		skip_user_ids=[]):
+	from django_grip import publish
+
 	content_filters = []
 	if pub_id:
 		event_id = '%I'
@@ -100,6 +101,8 @@ def publish_event(channel, event_type, data, pub_id, pub_prev_id,
 		meta=meta)
 
 def publish_kick(user_id, channel):
+	from django_grip import publish
+
 	msg = 'Permission denied to channels: %s' % channel
 	data = {'condition': 'forbidden', 'text': msg, 'channels': [channel]}
 	content = sse_encode_event('stream-error', data, event_id='error')
