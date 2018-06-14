@@ -158,12 +158,12 @@ class EventsConsumer(AsyncHttpConsumer):
 		extra_headers = {}
 		extra_headers['Cache-Control'] = 'no-cache'
 
-		cors_origin = ''
 		if hasattr(settings, 'EVENTSTREAM_ALLOW_ORIGIN'):
 			cors_origin = settings.EVENTSTREAM_ALLOW_ORIGIN
+		else:
+			cors_origin = settings.ALLOWED_HOSTS
 
-		if cors_origin:
-			extra_headers['Access-Control-Allow-Origin'] = cors_origin
+		extra_headers['Access-Control-Allow-Origin'] = cors_origin
 
 		# if this was a grip request or we encountered an error, respond now
 		if response:
