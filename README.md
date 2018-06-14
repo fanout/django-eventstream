@@ -152,6 +152,10 @@ daphne your_project.asgi:application
 
 See the [Channels Documentation](https://channels.readthedocs.io/en/latest/deploying.html) for information about deployment.
 
+### CORS Support
+
+By default, all event stream responses will use a CORS header built from the `ALLOWED_HOSTS` Django setting.  If a different set of allowed hosts is preferred, you can set `EVENTSTREAM_ALLOW_ORIGIN` in your application's `settings.py` to a list of allowable hostnames.
+
 ### Multiple instances and scaling
 
 If you want to run multiple instances of your Django project for high availablity, or need to be able to scale to a large number of connections, you can introduce a GRIP proxy layer (such as [Pushpin](https://pushpin.org) or [Fanout Cloud](https://fanout.io)) into your architecture.
