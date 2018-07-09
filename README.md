@@ -89,7 +89,7 @@ import django_eventstream
 urlpatterns = [
     url(r'^events/', AuthMiddlewareStack(
         URLRouter(django_eventstream.routing.urlpatterns)
-    ), channels=['test']),
+    ), {'channels': ['test']}),
     url(r'', AsgiHandler),
 ]
 ```
@@ -214,7 +214,7 @@ import django_eventstream
 
 urlpatterns = [
     ...
-    url(r'^events/', include(django_eventstream.urls), channels=['test']),
+    url(r'^events/', include(django_eventstream.urls), {'channels': ['test']}),
 ]
 ```
 
@@ -341,11 +341,11 @@ Examples:
 
 ```py
 # specify fixed list of channels
-url(r'^foo/events/', include(django_eventstream.urls), {'channels':['foo']})
+url(r'^foo/events/', include(django_eventstream.urls), {'channels': ['foo']})
 
 # specify a list of dynamic channels using formatting based on view keywords
 url(r'^objects/(?P<obj_id>\w+)/events/', include(django_eventstream.urls),
-    {'format-channels':['object-{obj_id}']})
+    {'format-channels': ['object-{obj_id}']})
 
 # client selects a single channel using a path component
 url(r'^events/(?P<channel>\w+)/', include(django_eventstream.urls))
