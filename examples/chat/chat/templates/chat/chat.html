@@ -68,6 +68,17 @@
     <script type="text/javascript">
       var msg_ids = [{% for msg in messages %}{% if not forloop.first %},{% endif %}{{ msg.id }}{% endfor %}];
 
+      var escapeHtml = function (s) {
+        var tagsToReplace = {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;'
+        };
+        return s.replace(/[&<>]/g, function(tag) {
+          return tagsToReplace[tag] || tag;
+        });
+      };
+
       var scrollToBottom = function (e) {
         e.scrollTop = e.scrollHeight;
       }
@@ -129,7 +140,7 @@
             return;
           }
 
-          appendLog('<b>' + msg.from + '</b>: ' + msg.text);
+          appendLog('<b>' + escapeHtml(msg.from) + '</b>: ' + escapeHtml(msg.text));
         }, false);
 
         $('#send-form').submit(function () {
