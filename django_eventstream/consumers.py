@@ -96,10 +96,10 @@ class EventsConsumer(AsyncHttpConsumer):
 		return EventRequest(request, view_kwargs=kwargs)
 
 	@database_sync_to_async
-	def get_events(self, event_request, user):
+	def get_events(self, event_request):
 		from .eventstream import get_events
 
-		return get_events(event_request, user=user)
+		return get_events(event_request)
 
 	async def handle(self, body):
 		from .eventrequest import EventRequest
@@ -140,14 +140,10 @@ class EventsConsumer(AsyncHttpConsumer):
 				'bad-request',
 				'Invalid request: %s.' % str(e))
 
-		user = None
-		if hasattr(request, 'user') and request.user.is_authenticated:
-			user = request.user
-
 		# for grip requests, prepare immediate response
 		if not response and request.grip_proxied:
 			try:
-				event_response = await self.get_events(event_request, user)
+				event_response = await self.get_events(event_request)
 				response = event_response.to_http_response(request)
 			except EventPermissionError as e:
 				response = sse_error_response(
@@ -197,13 +193,13 @@ class EventsConsumer(AsyncHttpConsumer):
 		self.listener = Listener()
 		self.is_streaming = True
 
-		asyncio.get_event_loop().create_task(self.stream(event_request, user))
+		asyncio.get_event_loop().create_task(self.stream(event_request))
 
-	async def stream(self, event_request, user):
+	async def stream(self, event_request):
 		from .eventstream import EventPermissionError
 		from .utils import sse_encode_event, make_id
 
-		self.listener.user_id = user.id if user else 'anonymous'
+		self.listener.user_id = event_request.user.id if event_request.user else 'anonymous'
 		self.listener.channels = event_request.channels
 
 		lm = get_listener_manager()
@@ -212,7 +208,7 @@ class EventsConsumer(AsyncHttpConsumer):
 
 		while self.is_streaming:
 			try:
-				event_response = await self.get_events(event_request, user)
+				event_response = await self.get_events(event_request)
 			except EventPermissionError as e:
 				data = {
 					'condition': 'forbidden',

@@ -9,13 +9,9 @@ def events(request, **kwargs):
 	from .eventstream import EventPermissionError, get_events
 	from .utils import sse_error_response
 
-	user = None
-	if request.user.is_authenticated:
-		user = request.user
-
 	try:
 		event_request = EventRequest(request, view_kwargs=kwargs)
-		event_response = get_events(event_request, user=user)
+		event_response = get_events(event_request)
 		response = event_response.to_http_response(request)
 	except EventRequest.ResumeNotAllowedError as e:
 		response = HttpResponseBadRequest(
