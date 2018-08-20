@@ -186,10 +186,6 @@ class EventsConsumer(AsyncHttpConsumer):
 
 		await self.send_headers(headers=headers)
 
-		body = b':' + (b' ' * 2048) + b'\n\n'
-		body += b'event: stream-open\ndata:\n\n'
-		await self.send_body(body, more_body=True)
-
 		self.listener = Listener()
 		self.is_streaming = True
 
@@ -205,6 +201,8 @@ class EventsConsumer(AsyncHttpConsumer):
 		lm = get_listener_manager()
 
 		lm.add_listener(self.listener)
+
+		first_result = True
 
 		while self.is_streaming:
 			try:
@@ -223,6 +221,13 @@ class EventsConsumer(AsyncHttpConsumer):
 			event_id = make_id(last_ids)
 
 			body = ''
+
+			if first_result:
+				first_result = False
+
+				# include padding on the first result
+				body += ':' + (' ' * 2048) + '\n\n'
+				body += 'event: stream-open\ndata:\n\n'
 
 			if len(event_response.channel_reset) > 0:
 				body += sse_encode_event(
