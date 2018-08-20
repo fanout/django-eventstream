@@ -68,7 +68,7 @@ class EventResponse(object):
 			'iss': 'es',
 			'exp': int(time.time()) + 3600,
 			'channels': self.channel_items.keys(),
-			'user': user_id
+			'user': str(user_id)
 		}
 		params['es-meta'] = jwt.encode(es_meta, settings.SECRET_KEY.encode('utf-8'))
 		uri = http_request.path + '?' + params.urlencode()
