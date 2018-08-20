@@ -1,4 +1,8 @@
+import time
+import jwt
 import six
+from django.contrib.auth import get_user_model
+from django.conf import settings
 from .utils import parse_grip_last, parse_last_event_id, get_channelmanager
 
 try:
@@ -20,6 +24,7 @@ class EventRequest(object):
 		self.channels = set()
 		self.channel_last_ids = {}
 		self.is_recover = False
+		self.user = None
 
 		if http_request:
 			self.apply_http_request(http_request,
@@ -29,9 +34,26 @@ class EventRequest(object):
 	def apply_http_request(self, http_request, channel_limit, view_kwargs):
 		is_next = False
 		is_recover = False
+		user = None
 
-		channelmanager = get_channelmanager()
-		channels = channelmanager.get_channels_for_request(http_request, view_kwargs)
+		es_meta = {}
+		if http_request.GET.get('es-meta'):
+			es_meta = jwt.decode(http_request.GET['es-meta'], settings.SECRET_KEY.encode('utf-8'))
+			if int(time.time()) >= es_meta['exp']:
+				raise ValueError('es-meta signature is expired')
+
+		if 'user' in es_meta:
+			if es_meta['user'] != 'anonymous':
+				user = get_user_model().objects.get(pk=es_meta['user'])
+		else:
+			if hasattr(http_request, 'user') and http_request.user.is_authenticated:
+				user = http_request.user
+
+		if 'channels' in es_meta:
+			channels = es_meta['channels']
+		else:
+			channelmanager = get_channelmanager()
+			channels = channelmanager.get_channels_for_request(http_request, view_kwargs)
 
 		if len(channels) < 1:
 			raise EventRequest.Error('No channels specified')
@@ -95,3 +117,4 @@ class EventRequest(object):
 		self.channel_last_ids = channel_last_ids
 		self.is_next = is_next
 		self.is_recover = is_recover
+		self.user = user

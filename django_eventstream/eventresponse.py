@@ -1,5 +1,8 @@
 import copy
+import time
+import jwt
 import six
+from django.conf import settings
 from django.http import HttpResponse
 from .utils import sse_encode_event, make_id, build_id_escape
 
@@ -49,6 +52,8 @@ class EventResponse(object):
 
 		more = (len(self.channel_more) > 0)
 
+		user_id = self.user.id if self.user else 'anonymous'
+
 		params = http_request.GET.copy()
 		params['link'] = 'next'
 		if more:
@@ -59,13 +64,18 @@ class EventResponse(object):
 			params['recover'] = 'true'
 			if 'lastEventId' in params:
 				del params['lastEventId']
+		es_meta = {
+			'iss': 'es',
+			'exp': int(time.time()) + 3600,
+			'channels': self.channel_items.keys(),
+			'user': str(user_id)
+		}
+		params['es-meta'] = jwt.encode(es_meta, settings.SECRET_KEY.encode('utf-8'))
 		uri = http_request.path + '?' + params.urlencode()
 		resp['Grip-Link'] = '<%s>; rel=next' % uri
 
 		if not more:
 			resp['Grip-Hold'] = 'stream'
-
-		user_id = self.user.id if self.user else 'anonymous'
 
 		channel_header = ''
 		for channel in six.iterkeys(self.channel_items):

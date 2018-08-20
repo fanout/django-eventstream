@@ -39,6 +39,9 @@ def send_event(channel, event_type, data, skip_user_ids=[]):
 		skip_user_ids=skip_user_ids)
 
 def get_events(request, limit=100, user=None):
+	if user is None:
+		user = request.user
+
 	resp = EventResponse()
 	resp.is_next = request.is_next
 	resp.is_recover = request.is_recover
