@@ -106,6 +106,9 @@ def get_events(request, limit=100, user=None):
 def get_current_event_id(channels):
 	storage = get_storage()
 
+	if not storage:
+		raise ValueError('get_current_event_id requires storage to be enabled')
+
 	cur_ids = {}
 	for channel in channels:
 		cur_ids[channel] = str(storage.get_current_id(channel))
