@@ -67,7 +67,7 @@ class EventResponse(object):
 		es_meta = {
 			'iss': 'es',
 			'exp': int(time.time()) + 3600,
-			'channels': self.channel_items.keys(),
+			'channels': list(self.channel_items.keys()),
 			'user': str(user_id)
 		}
 		params['es-meta'] = jwt.encode(es_meta, settings.SECRET_KEY.encode('utf-8'))
