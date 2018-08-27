@@ -102,6 +102,7 @@ class EventsConsumer(AsyncHttpConsumer):
 		return get_events(event_request)
 
 	async def handle(self, body):
+		from django_grip import GripMiddleware
 		from .eventrequest import EventRequest
 		from .eventstream import EventPermissionError
 		from .utils import sse_encode_event, sse_error_response, make_id
@@ -110,12 +111,8 @@ class EventsConsumer(AsyncHttpConsumer):
 
 		request = AsgiRequest(self.scope, body)
 
-		# TODO use GripMiddleware
-		request.grip_proxied = False
-		for name, value in self.scope['headers']:
-			if name == b'grip-sig':
-				request.grip_proxied = True
-				break
+		gm = GripMiddleware()
+		gm.process_request(request)
 
 		if 'user' in self.scope:
 			request.user = self.scope['user']
@@ -163,6 +160,8 @@ class EventsConsumer(AsyncHttpConsumer):
 
 		# if this was a grip request or we encountered an error, respond now
 		if response:
+			response = gm.process_response(request, response)
+
 			headers = []
 			for name, value in response.items():
 				headers.append((name, value))
