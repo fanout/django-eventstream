@@ -2,6 +2,7 @@ import copy
 import time
 import jwt
 import six
+from gripcontrol import Channel
 from django.conf import settings
 from django.http import HttpResponse
 from .utils import sse_encode_event, make_id, build_id_escape
@@ -21,7 +22,6 @@ class EventResponse(object):
 		self.is_recover = False
 		self.user = None
 
-	# FIXME: use django-grip instead of manually building headers
 	def to_http_response(self, http_request):
 		last_ids = copy.deepcopy(self.channel_last_ids)
 		event_id = make_id(last_ids)
@@ -52,7 +52,7 @@ class EventResponse(object):
 
 		more = (len(self.channel_more) > 0)
 
-		user_id = self.user.id if self.user else 'anonymous'
+		user_id = str(self.user.id) if self.user else 'anonymous'
 
 		params = http_request.GET.copy()
 		params['link'] = 'next'
@@ -68,45 +68,39 @@ class EventResponse(object):
 			'iss': 'es',
 			'exp': int(time.time()) + 3600,
 			'channels': list(self.channel_items.keys()),
-			'user': str(user_id)
+			'user': user_id
 		}
-		params['es-meta'] = jwt.encode(es_meta, settings.SECRET_KEY.encode('utf-8'))
-		uri = http_request.path + '?' + params.urlencode()
-		resp['Grip-Link'] = '<%s>; rel=next' % uri
+		params['es-meta'] = jwt.encode(es_meta,
+				settings.SECRET_KEY.encode('utf-8'))
+		next_uri = http_request.path + '?' + params.urlencode()
 
-		if not more:
-			resp['Grip-Hold'] = 'stream'
+		instruct = http_request.grip.start_instruct()
 
-		channel_header = ''
+		instruct.set_next_link(next_uri)
+
 		for channel in six.iterkeys(self.channel_items):
-			if len(channel_header) > 0:
-				channel_header += ', '
 			enc_channel = quote(channel)
 			last_id = last_ids.get(channel)
-			channel_header += 'events-%s' % enc_channel
+			gc = Channel('events-%s' % enc_channel, prev_id=last_id)
 			if last_id:
-				channel_header += '; prev-id=%s; filter=build-id' % last_id
-			channel_header += '; filter=skip-users'
-		channel_header += ', user-%s; filter=require-sub' % user_id
-		resp['Grip-Channel'] = channel_header
+				gc.filters.append('build-id')
+			gc.filters.append('skip-users')
+			instruct.add_channel(gc)
 
-		set_meta_header = ''
+		if not more:
+			instruct.set_hold_stream()
 
 		if len(last_ids) > 0:
 			id_parts = []
 			for channel in six.iterkeys(last_ids):
 				enc_channel = quote(channel)
-				id_parts.append('%s:%%(events-%s)s' % (build_id_escape(enc_channel), enc_channel))
+				id_parts.append('%s:%%(events-%s)s' % (build_id_escape(
+						enc_channel), enc_channel))
 			id_format = ','.join(id_parts)
-			set_meta_header += 'id_format="%s"' % id_format
+			instruct.meta['id_format'] = id_format
 
-		if len(set_meta_header) > 0:
-			set_meta_header += ', '
-		set_meta_header += 'user="%s"' % user_id
-		resp['Grip-Set-Meta'] = set_meta_header
+		instruct.meta['user'] = user_id
 
-		keep_alive_header = 'event: keep-alive\\ndata:\\n\\n'
-		keep_alive_header += '; format=cstring; timeout=20'
-		resp['Grip-Keep-Alive'] = keep_alive_header
+		instruct.set_keep_alive('event: keep-alive\ndata:\n\n', 20)
 
 		return resp

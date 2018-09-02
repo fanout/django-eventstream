@@ -2,7 +2,6 @@ import json
 import threading
 import importlib
 import six
-from werkzeug.http import parse_options_header
 from django.conf import settings
 from django.http import HttpResponse
 from django.core.serializers.json import DjangoJSONEncoder
@@ -21,20 +20,6 @@ def have_channels():
 		return True
 	except ImportError:
 		return False
-
-# return dict of (channel, last-id)
-def parse_grip_last(s):
-	parsed = parse_options_header(s, multiple=True)
-
-	out = {}
-	for n in range(0, len(parsed), 2):
-		channel = parsed[n]
-		params = parsed[n + 1]
-		last_id = params.get('last-id')
-		if last_id is None:
-			raise ValueError('channel "%s" has no last-id param' % channel)
-		out[channel] = last_id
-	return out
 
 # return dict of (channel, last-id)
 def parse_last_event_id(s):

@@ -3,7 +3,7 @@ import jwt
 import six
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from .utils import parse_grip_last, parse_last_event_id, get_channelmanager
+from .utils import parse_last_event_id, get_channelmanager
 
 try:
 	from urllib import unquote
@@ -64,22 +64,10 @@ class EventRequest(object):
 		if http_request.GET.get('link') == 'next':
 			is_next = True
 
-		grip_last = None
 		if http_request.GET.get('recover') == 'true':
-			grip_last = http_request.META.get('HTTP_GRIP_LAST')
-
-			if grip_last:
-				try:
-					grip_last = parse_grip_last(grip_last)
-				except:
-					raise EventRequest.GripError(
-						'Failed to parse Grip-Last header')
-			else:
-				grip_last = {}
-
 			channel_last_ids = {}
 			is_recover = True
-			for grip_channel, last_id in six.iteritems(grip_last):
+			for grip_channel, last_id in six.iteritems(http_request.grip.last):
 				if not grip_channel.startswith('events-'):
 					continue
 				channel = unquote(grip_channel[7:])

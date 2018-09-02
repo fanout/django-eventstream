@@ -1,5 +1,5 @@
 Django==1.11.4
-django-grip==1.8.0
+django-grip==2.0.0
 Werkzeug==0.12.2
 six==1.10.0
 django-dotenv==1.4.1

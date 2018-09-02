@@ -105,7 +105,7 @@ class EventsConsumer(AsyncHttpConsumer):
 		from django_grip import GripMiddleware
 		from .eventrequest import EventRequest
 		from .eventstream import EventPermissionError
-		from .utils import sse_encode_event, sse_error_response, make_id
+		from .utils import sse_error_response
 
 		self.listener = None
 
@@ -124,7 +124,7 @@ class EventsConsumer(AsyncHttpConsumer):
 			response = HttpResponseBadRequest(
 				'Invalid request: %s.\n' % str(e))
 		except EventRequest.GripError as e:
-			if request.grip_proxied:
+			if request.grip.proxied:
 				response = sse_error_response(
 					'internal-error',
 					'Invalid internal request.')
@@ -138,7 +138,7 @@ class EventsConsumer(AsyncHttpConsumer):
 				'Invalid request: %s.' % str(e))
 
 		# for grip requests, prepare immediate response
-		if not response and request.grip_proxied:
+		if not response and request.grip.proxied:
 			try:
 				event_response = await self.get_events(event_request)
 				response = event_response.to_http_response(request)

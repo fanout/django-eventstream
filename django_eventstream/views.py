@@ -17,7 +17,7 @@ def events(request, **kwargs):
 		response = HttpResponseBadRequest(
 			'Invalid request: %s.\n' % str(e))
 	except EventRequest.GripError as e:
-		if request.grip_proxied:
+		if request.grip.proxied:
 			response = sse_error_response(
 				'internal-error',
 				'Invalid internal request.')
