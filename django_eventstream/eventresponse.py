@@ -87,6 +87,10 @@ class EventResponse(object):
 			gc.filters.append('skip-users')
 			instruct.add_channel(gc)
 
+		gc = Channel('user-%s' % user_id)
+		gc.filters.append('require-sub')
+		instruct.add_channel(gc)
+
 		if not more:
 			instruct.set_hold_stream()
 
