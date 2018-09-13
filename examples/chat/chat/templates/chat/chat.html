@@ -1,69 +1,22 @@
 {% load static %}
-<html>
+<!doctype html>
+<html class="no-js" lang="">
   <head>
-    <meta id="meta" name="viewport" content="width=device-width; initial-scale=1.0" />
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Chat</title>
+    <meta name="description" content="Chat">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" type="text/css" href="{% static 'chat/normalize.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'chat/main.css' %}">
+
+    <script src="{% static 'chat/jquery-3.2.1.min.js' %}"></script>
 
     <script src="{% static 'django_eventstream/json2.js' %}"></script>
     <script src="{% static 'django_eventstream/eventsource.min.js' %}"></script>
     <script src="{% static 'django_eventstream/reconnecting-eventsource.js' %}"></script>
     <script src="{% static 'chat/jquery-3.2.1.min.js' %}"></script>
-
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-      }
-
-      input, div {
-        font-size: 16px;
-      }
-
-      header#chat-header {
-        height: 32px;
-        line-height: 32px;
-        text-align: center;
-        color: #ffffff;
-        background-color: #00a79d;
-        margin: 0;
-      }
-
-      div#chat-log {
-        overflow: auto;
-      }
-
-      div#chat-input-area {
-        width: 100%;
-        height: 32px;
-        line-height: 32px;
-        color: #ffffff;
-        background-color: #00a79d;
-        margin: 0;
-      }
-
-      form#send-form {
-        width: 100%;
-        overflow: hidden;
-        margin: 0;
-      }
-
-      span#chat-input-span {
-        display: block;
-        overflow: hidden;
-      }
-
-      input#chat-input {
-        width: 100%;
-      }
-
-      button#send-button {
-        float: right;
-      }
-
-      input#nick-input {
-        width: 400px;
-      }
-    </style>
 
     <script type="text/javascript">
       var msg_ids = [{% for msg in messages %}{% if not forloop.first %},{% endif %}{{ msg.id }}{% endfor %}];
@@ -144,11 +97,13 @@
         }, false);
 
         $('#send-form').submit(function () {
+
           var text = $('#chat-input').val();
+          if(text.length == 0) { return false }
 
           $('#chat-input').attr('disabled', 'true');
-          $('#send-button').attr('disabled', 'true');
-          $('#send-button').text('Sending...');
+          $('#chat-send-button').attr('disabled', 'true');
+          $('#chat-send-button').text('Sending...');
           $.post('/rooms/{{ room_id }}/messages/', { from: user, text: text }
           ).done(function (data) {
             console.log('send response: ' + JSON.stringify(data));
@@ -156,10 +111,10 @@
             alert('failed to send message');
           }).always(function () {
             $('#chat-input').val('');
-            $('#send-button').text('Send');
             $('#chat-input').removeAttr('disabled');
-            $('#send-button').removeAttr('disabled');
             $('#chat-input').focus();
+            $('#chat-send-button').text('Send');
+            $('#chat-send-button').removeAttr('disabled');
           });
 
           return false;
@@ -169,8 +124,6 @@
       };
 
       $(function () {
-        $('#chat-log').height(window.innerHeight - 64);
-
         startChat('{{ user|escapejs }}');
       });
     </script>
@@ -191,8 +144,8 @@
 
     <div id="chat-input-area">
       <form id="send-form">
-        <button id="send-button">Send</button>
-        <span id="chat-input-span"><input type="text" id="chat-input" autocomplete="off" /></span>
+        <input type="text" id="chat-input" autocomplete="off" placeholder="Say something" />
+        <input type="submit" id="chat-send-button" value="Send" />
       </form>
     </div>
 

@@ -1,42 +1,17 @@
 {% load static %}
-<html>
+<!doctype html>
+<html class="no-js" lang="">
   <head>
-    <meta id="meta" name="viewport" content="width=device-width; initial-scale=1.0" />
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Join</title>
+    <meta name="description" content="Chat">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" type="text/css" href="{% static 'chat/normalize.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'chat/main.css' %}">
 
     <script src="{% static 'chat/jquery-3.2.1.min.js' %}"></script>
-
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        color: #ffffff;
-        background-color: #00a79d;
-      }
-
-      input, div {
-        font-size: 16px;
-      }
-
-      form#join-form {
-        width: 80%;
-        overflow: hidden;
-        margin-top: 30%;
-        margin-bottom: 30%;
-        margin-left: auto;
-        margin-right: auto;
-      }
-
-      span#nick-input-span {
-        display: block;
-        overflow: hidden;
-      }
-
-      input#nick-input {
-        max-width: 100%;
-      }
-    </style>
-
     <script type="text/javascript">
       $(function () {
         $('#join-form').submit(function () {
@@ -51,12 +26,11 @@
       });
     </script>
   </head>
-
   <body>
     <div id="join-elements">
       <form id="join-form">
-        <span id="nick-input-span">Nickname: <input type="text" id="nick-input" />
-        <button id="join-button">Join</button></span>
+        <input type="text" id="nick-input" placeholder="Nickname" />
+        <input type="submit" id="join-button" value="Join" />
       </form>
     </div>
   </body>
