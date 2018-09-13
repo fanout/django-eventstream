@@ -84,6 +84,7 @@ input[type="submit"] {
   right: 20px;
   bottom: 90px;
   overflow-y: scroll;
+  overflow-x: hidden;
   scroll-behavior: smooth;
 }
 
@@ -104,4 +105,34 @@ input[type="submit"] {
 @media(max-width: 500px) {
   #chat-input { width: 76%; }
   #chat-send-button { width: 23%; }
+}
+@media(max-width: 479px) {
+  body {
+    padding: 0;
+  }
+  #chat-header {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    margin-bottom: 10px;
+  }
+  #chat-log {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    overflow-y: auto;
+    overflow-x: auto;
+    padding-left: 10px;
+    padding-right; 10px;
+  }
+  #chat-input-area {
+    margin-top: 10px;
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+  }
 }

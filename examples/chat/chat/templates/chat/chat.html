@@ -11,12 +11,35 @@
     <link rel="stylesheet" type="text/css" href="{% static 'chat/normalize.min.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'chat/main.css' %}">
 
-    <script src="{% static 'chat/jquery-3.2.1.min.js' %}"></script>
-
     <script src="{% static 'django_eventstream/json2.js' %}"></script>
     <script src="{% static 'django_eventstream/eventsource.min.js' %}"></script>
     <script src="{% static 'django_eventstream/reconnecting-eventsource.js' %}"></script>
     <script src="{% static 'chat/jquery-3.2.1.min.js' %}"></script>
+
+  </head>
+
+  <body>
+    <header id="chat-header">
+      #{{ room_id }}
+    </header>
+
+    <div id="chat-elements">
+      <div id="chat-log">
+        {% for msg in messages %}
+          <b>{{ msg.from }}</b>: {{ msg.text }}<br />
+        {% endfor %}
+        <a name="bottom"></a>
+      </div>
+    </div>
+
+    <div id="chat-input-area">
+      <form id="send-form">
+        <input type="text" id="chat-input" autocomplete="off" placeholder="Say something" />
+        <input type="submit" id="chat-send-button" value="Send" />
+      </form>
+    </div>
+
+  </body>
 
     <script type="text/javascript">
       var msg_ids = [{% for msg in messages %}{% if not forloop.first %},{% endif %}{{ msg.id }}{% endfor %}];
@@ -45,14 +68,14 @@
       var appendLog = function (s) {
         var log = $('#chat-log');
         log.append(s + '<br>');
-        tryScrollToBottom(log.get(0), 50);
+        scrollToBottom(log.get(0));
       };
 
       var startChat = function (user) {
         console.log('user=[' + user + ']');
 
         var log = $('#chat-log').get(0);
-        scrollToBottom(log);
+        log.scrollTop = log.scrollHeight
 
         var uri = '/events/?channel=room-' + encodeURIComponent('{{ room_id }}');
         var es = new ReconnectingEventSource(uri, {
@@ -127,27 +150,5 @@
         startChat('{{ user|escapejs }}');
       });
     </script>
-  </head>
-
-  <body>
-    <header id="chat-header">
-      #{{ room_id }}
-    </header>
-
-    <div id="chat-elements">
-      <div id="chat-log">
-        {% for msg in messages %}
-          <b>{{ msg.from }}</b>: {{ msg.text }}<br />
-        {% endfor %}
-      </div>
-    </div>
-
-    <div id="chat-input-area">
-      <form id="send-form">
-        <input type="text" id="chat-input" autocomplete="off" placeholder="Say something" />
-        <input type="submit" id="chat-send-button" value="Send" />
-      </form>
-    </div>
-
-  </body>
+  
 </html>
