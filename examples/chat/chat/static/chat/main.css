@@ -111,11 +111,15 @@ input[type="submit"] {
     padding: 0;
   }
   #chat-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+  }
+  #chat-elements {
     position: relative;
-    top: auto;
-    left: auto;
-    right: auto;
-    margin-bottom: 10px;
+    z-index: 1;
   }
   #chat-log {
     position: relative;
@@ -123,16 +127,18 @@ input[type="submit"] {
     left: auto;
     right: auto;
     bottom: auto;
+    opacity: 1;
     overflow-y: auto;
     overflow-x: auto;
-    padding-left: 10px;
-    padding-right; 10px;
+    padding-top: 40px;
+    padding-left: 16px;
+    padding-right; 16px;
+    padding-bottom: 60px;
   }
   #chat-input-area {
-    margin-top: 10px;
-    position: relative;
-    left: auto;
-    right: auto;
-    bottom: auto;
+    z-index: 1;
+    left: 0;
+    right: 0;
+    bottom: 0;
   }
 }

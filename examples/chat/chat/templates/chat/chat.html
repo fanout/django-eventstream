@@ -68,14 +68,16 @@
       var appendLog = function (s) {
         var log = $('#chat-log');
         log.append(s + '<br>');
-        scrollToBottom(log.get(0));
+        $('#chat-log').scrollTop($('#chat-log').height())
+        $('html, body').scrollTop($('#chat-log').height())
       };
 
       var startChat = function (user) {
         console.log('user=[' + user + ']');
 
         var log = $('#chat-log').get(0);
-        log.scrollTop = log.scrollHeight
+        $('#chat-log').scrollTop($('#chat-log').height())
+        $('html, body').scrollTop($('#chat-log').height())
 
         var uri = '/events/?channel=room-' + encodeURIComponent('{{ room_id }}');
         var es = new ReconnectingEventSource(uri, {
