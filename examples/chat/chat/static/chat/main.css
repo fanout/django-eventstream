@@ -77,7 +77,7 @@ input[type="submit"] {
   margin: 0;
 }
 
-#chat-log {
+#chat-elements {
   position: fixed;
   top: 62px;
   left: 36px;
@@ -89,6 +89,7 @@ input[type="submit"] {
 }
 
 #chat-input-area {
+  background-color: #e3e3e3;
   position: fixed;
   bottom: 20px;
   left: 20px;
@@ -97,16 +98,11 @@ input[type="submit"] {
 
 #chat-input { width: 80%; }
 #chat-send-button {
-  position: absolute;
-  right: 0;
+  display: inline-block;
   width: 19%;
 }
 
-@media(max-width: 500px) {
-  #chat-input { width: 76%; }
-  #chat-send-button { width: 23%; }
-}
-@media(max-width: 479px) {
+@media(max-width: 759px) {
   body {
     padding: 0;
   }
@@ -121,7 +117,7 @@ input[type="submit"] {
     position: relative;
     z-index: 1;
   }
-  #chat-log {
+  #chat-elements {
     position: relative;
     top: auto;
     left: auto;
@@ -130,6 +126,8 @@ input[type="submit"] {
     opacity: 1;
     overflow-y: auto;
     overflow-x: auto;
+  }
+  #chat-log {
     padding-top: 40px;
     padding-left: 16px;
     padding-right; 16px;
@@ -141,4 +139,13 @@ input[type="submit"] {
     right: 0;
     bottom: 0;
   }
+  #send-form {
+    position: relative;
+    display: block;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+  }
+  #chat-input { width: 74%; }
+  #chat-send-button { width: 22%; }
 }
