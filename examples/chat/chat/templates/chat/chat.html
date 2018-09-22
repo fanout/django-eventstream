@@ -135,11 +135,11 @@
           $('#chat-send-button').text('Sending...');
           $.post('/rooms/{{ room_id }}/messages/', { from: user, text: text }
           ).done(function (data) {
+            $('#chat-input').val('');
             console.log('send response: ' + JSON.stringify(data));
           }).fail(function () {
             alert('failed to send message');
           }).always(function () {
-            $('#chat-input').val('');
             $('#chat-input').removeAttr('disabled');
             $('#chat-input').focus();
             $('#chat-send-button').text('Send');
