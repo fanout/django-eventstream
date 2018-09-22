@@ -57,6 +57,7 @@
 
       var scrollToBottom = function (e) {
         e.scrollTop(e.height());
+        $('html, body').scrollTop($('#chat-elements').height());
       };
 
       var tryScrollToBottom = function (e, threshold) {
@@ -77,6 +78,7 @@
 
         // smooth scroll should be off when this first scroll is called
         scrollToBottom($('#chat-elements'));
+        $('html, body').scrollTop($('#chat-elements').height());
 
         // now we can turn it on
         $('#chat-elements').css('scroll-behavior', 'smooth');
