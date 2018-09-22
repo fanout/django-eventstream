@@ -85,7 +85,6 @@ input[type="submit"] {
   bottom: 90px;
   overflow-y: scroll;
   overflow-x: hidden;
-  scroll-behavior: smooth;
 }
 
 #chat-input-area {

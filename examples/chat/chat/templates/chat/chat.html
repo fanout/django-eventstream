@@ -56,28 +56,30 @@
       };
 
       var scrollToBottom = function (e) {
-        e.scrollTop = e.scrollHeight;
-      }
+        e.scrollTop(e.height());
+      };
 
       var tryScrollToBottom = function (e, threshold) {
-        if(e.scrollTop + e.clientHeight + threshold > e.scrollHeight) {
-          e.scrollTop = e.scrollHeight;
+        var el = e.get(0);
+        if(el.scrollTop + el.clientHeight + threshold > el.scrollHeight) {
+          scrollToBottom(e);
         }
-      }
+      };
 
       var appendLog = function (s) {
         var log = $('#chat-log');
         log.append(s + '<br>');
-        $('#chat-elements').scrollTop($('#chat-elements').height())
-        $('html, body').scrollTop($('#chat-elements').height())
+        tryScrollToBottom($('#chat-elements'), 50);
       };
 
       var startChat = function (user) {
         console.log('user=[' + user + ']');
 
-        var log = $('#chat-elements').get(0);
-        $('#chat-elements').scrollTop($('#chat-elements').height())
-        $('html, body').scrollTop($('#chat-elements').height())
+        // smooth scroll should be off when this first scroll is called
+        scrollToBottom($('#chat-elements'));
+
+        // now we can turn it on
+        $('#chat-elements').css('scroll-behavior', 'smooth');
 
         var uri = '/events/?channel=room-' + encodeURIComponent('{{ room_id }}');
         var es = new ReconnectingEventSource(uri, {
