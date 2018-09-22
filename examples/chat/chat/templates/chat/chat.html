@@ -20,7 +20,11 @@
 
   <body>
     <header id="chat-header">
-      #{{ room_id }}
+      <span id="user-label">{{ user }}</span>
+      <span>#{{ room_id }}</span>
+      <span id="code-link">
+        <a href="https://github.com/fanout/django-eventstream/tree/master/examples/chat">code</a>
+      </span>
     </header>
 
     <div id="chat-elements">

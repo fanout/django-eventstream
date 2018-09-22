@@ -101,6 +101,16 @@ input[type="submit"] {
   width: 19%;
 }
 
+#user-label {
+  float: left;
+  padding-left: 16px;
+}
+
+#code-link {
+  float: right;
+  margin-right: 16px;
+}
+
 @media(max-width: 759px) {
   body {
     padding: 0;
