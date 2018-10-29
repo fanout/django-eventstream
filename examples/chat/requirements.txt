@@ -1,4 +1,4 @@
-Django==1.11.4
+Django==1.11.15
 django-grip==2.0.0
 Werkzeug==0.12.2
 six==1.10.0
