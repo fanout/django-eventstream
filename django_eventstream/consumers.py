@@ -1,6 +1,7 @@
 import copy
 import threading
 import asyncio
+import six
 from django.http import HttpResponseBadRequest
 from django.conf import settings
 from channels.generic.http import AsyncHttpConsumer
@@ -179,8 +180,12 @@ class EventsConsumer(AsyncHttpConsumer):
 		# if we got here then the request was not a grip request, and there
 		#   were no errors, so we can begin a local stream response
 
-		headers = [('Content-Type', 'text/event-stream')]
+		headers = [(six.b('Content-Type'), six.b('text/event-stream'))]
 		for name, value in extra_headers.items():
+			if isinstance(name, six.text_type):
+				name = name.encode('utf-8')
+			if isinstance(value, six.text_type):
+				value = value.encode('utf-8')
 			headers.append((name, value))
 
 		await self.send_headers(headers=headers)
