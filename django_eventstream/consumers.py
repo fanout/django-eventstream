@@ -165,9 +165,17 @@ class EventsConsumer(AsyncHttpConsumer):
 
 			headers = []
 			for name, value in response.items():
+				if isinstance(name, six.text_type):
+					name = name.encode('utf-8')
+				if isinstance(value, six.text_type):
+					value = value.encode('utf-8')
 				headers.append((name, value))
 
 			for name, value in extra_headers.items():
+				if isinstance(name, six.text_type):
+					name = name.encode('utf-8')
+				if isinstance(value, six.text_type):
+					value = value.encode('utf-8')
 				headers.append((name, value))
 
 			await self.send_response(
