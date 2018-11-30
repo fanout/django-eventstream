@@ -137,3 +137,19 @@ def get_channelmanager():
 	return get_class_from_setting(
 		'EVENTSTREAM_CHANNELMANAGER_CLASS',
 		'django_eventstream.channelmanager.DefaultChannelManager')
+
+def augment_cors_headers(headers):
+	cors_origin = ''
+	if hasattr(settings, 'EVENTSTREAM_ALLOW_ORIGIN'):
+		cors_origin = settings.EVENTSTREAM_ALLOW_ORIGIN
+
+	if cors_origin:
+		headers['Access-Control-Allow-Origin'] = cors_origin
+
+	allow_credentials = False
+	if hasattr(settings, 'EVENTSTREAM_ALLOW_CREDENTIALS'):
+		allow_credentials = settings.EVENTSTREAM_ALLOW_CREDENTIALS
+
+	if allow_credentials:
+		headers['Access-Control-Allow-Credentials'] = 'true'
+
