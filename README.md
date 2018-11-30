@@ -356,3 +356,17 @@ url(r'^events/', include(django_eventstream.urls))
 Note that if view keywords or a channel path component are used, the client cannot use query parameters to select channels.
 
 If even more advanced channel mapping is needed, implement a channel manager and override `get_channels_for_request`.
+
+## Cross-Origin Resource Sharing (CORS) Headers
+
+There are two setting properties available to set `Access-Control-Allow-Origin` and `EVENTSTREAM_ALLOW_CREDENTIALS` 
+which are `EVENTSTREAM_ALLOW_ORIGIN` and `EVENTSTREAM_ALLOW_CREDENTIALS`, respectively.
+
+Examples:
+
+```py
+EVENTSTREAM_ALLOW_ORIGIN = 'your-website.com'
+EVENTSTREAM_ALLOW_CREDENTIALS = True
+```
+
+Note that `EVENTSTREAM_ALLOW_ORIGIN` only takes a single string value and does not process a list.
