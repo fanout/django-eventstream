@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.http import HttpResponseBadRequest
+from .utils import augment_cors_headers
 
 def events(request, **kwargs):
 	from .eventrequest import EventRequest
@@ -37,11 +38,6 @@ def events(request, **kwargs):
 
 	response['Cache-Control'] = 'no-cache'
 
-	cors_origin = ''
-	if hasattr(settings, 'EVENTSTREAM_ALLOW_ORIGIN'):
-		cors_origin = settings.EVENTSTREAM_ALLOW_ORIGIN
-
-	if cors_origin:
-		response['Access-Control-Allow-Origin'] = cors_origin
+	augment_cors_headers(response)
 
 	return response

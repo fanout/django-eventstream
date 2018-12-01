@@ -7,6 +7,7 @@ from django.conf import settings
 from channels.generic.http import AsyncHttpConsumer
 from channels.http import AsgiRequest
 from channels.db import database_sync_to_async
+from .utils import augment_cors_headers
 
 MAX_PENDING = 10
 
@@ -151,13 +152,7 @@ class EventsConsumer(AsyncHttpConsumer):
 
 		extra_headers = {}
 		extra_headers['Cache-Control'] = 'no-cache'
-
-		cors_origin = ''
-		if hasattr(settings, 'EVENTSTREAM_ALLOW_ORIGIN'):
-			cors_origin = settings.EVENTSTREAM_ALLOW_ORIGIN
-
-		if cors_origin:
-			extra_headers['Access-Control-Allow-Origin'] = cors_origin
+		augment_cors_headers(extra_headers)
 
 		# if this was a grip request or we encountered an error, respond now
 		if response:
