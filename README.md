@@ -359,8 +359,7 @@ If even more advanced channel mapping is needed, implement a channel manager and
 
 ## Cross-Origin Resource Sharing (CORS) Headers
 
-There are two setting properties available to set `Access-Control-Allow-Origin` and `EVENTSTREAM_ALLOW_CREDENTIALS` 
-which are `EVENTSTREAM_ALLOW_ORIGIN` and `EVENTSTREAM_ALLOW_CREDENTIALS`, respectively.
+There are two setting properties available to set `Access-Control-Allow-Origin` and `Access-Control-Allow-Credentials` which are `EVENTSTREAM_ALLOW_ORIGIN` and `EVENTSTREAM_ALLOW_CREDENTIALS`, respectively.
 
 Examples:
 
