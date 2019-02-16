@@ -1,0 +1,164 @@
+{% load static %}
+<!doctype html>
+<html class="no-js" lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Chat</title>
+    <meta name="description" content="Chat">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <link rel="stylesheet" type="text/css" href="{% static 'chat/normalize.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'chat/main.css' %}">
+
+    <script src="{% static 'django_eventstream/json2.js' %}"></script>
+    <script src="{% static 'django_eventstream/eventsource.min.js' %}"></script>
+    <script src="{% static 'django_eventstream/reconnecting-eventsource.js' %}"></script>
+    <script src="{% static 'chat/jquery-3.2.1.min.js' %}"></script>
+
+  </head>
+
+  <body>
+    <header id="chat-header">
+      <span id="user-label">{{ user }}</span>
+      <span>#{{ room_id }}</span>
+      <span id="code-link">
+        <a href="https://github.com/fanout/django-eventstream/tree/master/examples/chat">code</a>
+      </span>
+    </header>
+
+    <div id="chat-elements">
+      <div id="chat-log">
+        {% for msg in messages %}
+          <b>{{ msg.from }}</b>: {{ msg.text }}<br />
+        {% endfor %}
+        <a name="bottom"></a>
+      </div>
+    </div>
+
+    <div id="chat-input-area">
+      <form id="send-form">
+        <input type="text" id="chat-input" autocomplete="off" placeholder="Say something" />
+        <input type="submit" id="chat-send-button" value="Send" />
+      </form>
+    </div>
+
+  </body>
+
+    <script type="text/javascript">
+      var msg_ids = [{% for msg in messages %}{% if not forloop.first %},{% endif %}{{ msg.id }}{% endfor %}];
+
+      var escapeHtml = function (s) {
+        var tagsToReplace = {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;'
+        };
+        return s.replace(/[&<>]/g, function(tag) {
+          return tagsToReplace[tag] || tag;
+        });
+      };
+
+      var scrollToBottom = function (e) {
+        e.scrollTop(e.height());
+        $('html, body').scrollTop($('#chat-elements').height());
+      };
+
+      var tryScrollToBottom = function (e, threshold) {
+        var el = e.get(0);
+        if(el.scrollTop + el.clientHeight + threshold > el.scrollHeight) {
+          scrollToBottom(e);
+        }
+      };
+
+      var appendLog = function (s) {
+        var log = $('#chat-log');
+        log.append(s + '<br>');
+        tryScrollToBottom($('#chat-elements'), 50);
+      };
+
+      var startChat = function (user) {
+        console.log('user=[' + user + ']');
+
+        // smooth scroll should be off when this first scroll is called
+        scrollToBottom($('#chat-elements'));
+        $('html, body').scrollTop($('#chat-elements').height());
+
+        // now we can turn it on
+        $('#chat-elements').css('scroll-behavior', 'smooth');
+
+        var uri = '/rooms/' + encodeURIComponent('{{ room_id }}') + '/events/';
+        var es = new ReconnectingEventSource(uri, {
+          lastEventId: '{{ last_id }}'
+        });
+
+        var firstConnect = true;
+
+        es.onopen = function () {
+          if(!firstConnect) {
+            appendLog('*** connected');
+          }
+          firstConnect = false;
+        };
+
+        es.onerror = function () {
+          appendLog('*** connection lost, reconnecting...');
+        };
+
+        es.addEventListener('stream-reset', function () {
+          appendLog('*** client too far behind, please refresh');
+        }, false);
+
+        es.addEventListener('stream-error', function (e) {
+          // hard stop
+          es.close();
+          e = JSON.parse(e.data);
+          appendLog('*** stream error: ' + e.condition + ': ' + e.text);
+        }, false);
+
+        es.addEventListener('message', function (e) {
+          console.log('event: ' + e.data);
+          msg = JSON.parse(e.data);
+
+          // if an event arrives that was already in the initial pageload,
+          //   ignore it
+          if($.inArray(msg.id, msg_ids) != -1) {
+            return;
+          }
+
+          appendLog('<b>' + escapeHtml(msg.from) + '</b>: ' + escapeHtml(msg.text));
+        }, false);
+
+        $('#send-form').submit(function () {
+
+          var text = $('#chat-input').val();
+          if(text.length == 0) { return false }
+
+          $('#chat-input').attr('disabled', 'true');
+          $('#chat-send-button').attr('disabled', 'true');
+          $('#chat-send-button').text('Sending...');
+          $.post('/rooms/{{ room_id }}/messages/', { from: user, text: text }
+          ).done(function (data) {
+            $('#chat-input').val('');
+            console.log('send response: ' + JSON.stringify(data));
+          }).fail(function () {
+            alert('failed to send message');
+          }).always(function () {
+            $('#chat-input').removeAttr('disabled');
+            $('#chat-input').focus();
+            $('#chat-send-button').text('Send');
+            $('#chat-send-button').removeAttr('disabled');
+          });
+
+          return false;
+        });
+
+        $('#chat-input').focus();
+      };
+
+      $(function () {
+        startChat('{{ user|escapejs }}');
+      });
+    </script>
+  
+</html>
