@@ -1,4 +1,4 @@
-# Basic example
+# Time example
 
 Sends the current time over a stream.
 
