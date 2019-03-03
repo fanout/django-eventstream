@@ -1,6 +1,6 @@
 from channels.routing import ProtocolTypeRouter, URLRouter
-import basic.routing
+import timeapp.routing
 
 application = ProtocolTypeRouter({
-    'http': URLRouter(basic.routing.urlpatterns),
+    'http': URLRouter(timeapp.routing.urlpatterns),
 })

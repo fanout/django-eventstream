@@ -27,7 +27,7 @@ def home(request):
 	context = {}
 	context['url'] = '/events/?channel=test'
 	context['last_id'] = get_current_event_id(['test'])
-	return render(request, 'basic/home.html', context)
+	return render(request, 'timeapp/home.html', context)
 
 send_thread = threading.Thread(target=_send_worker)
 send_thread.daemon = True

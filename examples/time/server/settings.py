@@ -45,7 +45,7 @@ if have_channels():
 
 INSTALLED_APPS.extend([
     'django_eventstream',
-    'basic',
+    'timeapp',
 ])
 
 MIDDLEWARE = [
@@ -134,4 +134,4 @@ ASGI_APPLICATION = 'server.routing.application'
 GRIP_URL = os.environ.get('GRIP_URL')
 
 EVENTSTREAM_STORAGE_CLASS = 'django_eventstream.storage.DjangoModelStorage'
-EVENTSTREAM_CHANNELMANAGER_CLASS = 'basic.views.MyChannelManager'
+EVENTSTREAM_CHANNELMANAGER_CLASS = 'timeapp.views.MyChannelManager'
