@@ -89,6 +89,27 @@ def get_listener_manager():
 	return listener_manager
 
 class EventsConsumer(AsyncHttpConsumer):
+	# this function adapted from channels 2.1.5
+	async def __call__(self, receive, send):
+		"""
+		Async entrypoint - concatenates body fragments and hands off control
+		to ``self.handle`` when the body has been completely received.
+		"""
+		self.send = send
+		body = []
+		try:
+			while True:
+				message = await receive()
+				if message["type"] == "http.disconnect":
+					return
+				else:
+					if "body" in message:
+						body.append(message["body"])
+					if not message.get("more_body"):
+						await self.handle(b"".join(body))
+		finally:
+			await self.disconnect()
+
 	@database_sync_to_async
 	def parse_request(self, request):
 		from .eventrequest import EventRequest
