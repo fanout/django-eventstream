@@ -1,7 +1,0 @@
-Django==1.11.18
-django-grip==2.0.0
-Werkzeug==0.12.2
-six==1.10.0
-django-dotenv==1.4.1
-dj-database-url==0.4.2
-channels==2.1.2; python_version >= '3.5'
