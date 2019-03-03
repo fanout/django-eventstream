@@ -3,3 +3,7 @@
 venv
 .eggs/
 *.egg-info/
+db.sqlite3
+db.sqlite3-journal
+build/
+dist/
