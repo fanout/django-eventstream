@@ -107,12 +107,11 @@ Returns: JSON object of message
 ### Get events:
 
 ```http
-GET /events/
+GET /events/{room-id}/events/
 ```
 
 Params:
 
-* `channel`: events channel to listen to, using the form `room-{room-id}`. can be specified more than once to listen to events of multiple rooms
 * `lastEventId`: event ID to start reading from (optional)
 
 Returns: SSE stream
