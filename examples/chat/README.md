@@ -107,7 +107,7 @@ Returns: JSON object of message
 ### Get events:
 
 ```http
-GET /events/{room-id}/events/
+GET /rooms/{room-id}/events/
 ```
 
 Params:
