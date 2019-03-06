@@ -1,8 +1,8 @@
-from django.conf.urls import include, url
+from django.urls import path, include
 import django_eventstream
 from . import views
 
 urlpatterns = [
-	url(r'^$', views.home),
-	url(r'^events/', include(django_eventstream.urls)),
+	path('', views.home),
+	path('events/', include(django_eventstream.urls), {'channels': ['time']}),
 ]

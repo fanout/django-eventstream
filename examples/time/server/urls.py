@@ -1,5 +1,5 @@
-from django.conf.urls import include, url
+from django.urls import include, path
 
 urlpatterns = [
-	url(r'', include('timeapp.urls')),
+	path('', include('timeapp.urls')),
 ]

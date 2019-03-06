@@ -1,8 +1,5 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from django.apps import AppConfig
 
 
-class BasicConfig(AppConfig):
-    name = 'timeapp'
+class TimeappConfig(AppConfig):
+    name = 'chat'

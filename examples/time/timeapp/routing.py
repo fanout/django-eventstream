@@ -5,8 +5,8 @@ from channels.auth import AuthMiddlewareStack
 import django_eventstream
 
 urlpatterns = [
-    url(r'^events/', AuthMiddlewareStack(
-        URLRouter(django_eventstream.routing.urlpatterns)
-    )),
-    url(r'', AsgiHandler),
+	url(r'^events/', AuthMiddlewareStack(
+		URLRouter(django_eventstream.routing.urlpatterns)
+	), {'channels': ['time']}),
+	url(r'', AsgiHandler),
 ]
