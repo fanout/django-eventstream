@@ -16,6 +16,12 @@ class MyChannelManager(DefaultChannelManager):
 			return False
 		return True
 
+def home(request):
+	context = {}
+	context['url'] = '/events/?channel=test'
+	context['last_id'] = get_current_event_id(['test'])
+	return render(request, 'timeapp/home.html', context)
+
 def _send_worker():
 	while True:
 		data = datetime.datetime.utcnow().isoformat()
@@ -23,12 +29,17 @@ def _send_worker():
 			send_event(channel, 'message', data)
 		time.sleep(1)
 
-def home(request):
-	context = {}
-	context['url'] = '/events/?channel=test'
-	context['last_id'] = get_current_event_id(['test'])
-	return render(request, 'timeapp/home.html', context)
+def _db_ready():
+	from django.db import DatabaseError
+	from django_eventstream.models import Event
+	try:
+		# see if db tables are present
+		Event.objects.count()
+		return True
+	except DatabaseError:
+		return False
 
-send_thread = threading.Thread(target=_send_worker)
-send_thread.daemon = True
-send_thread.start()
+if _db_ready():
+	send_thread = threading.Thread(target=_send_worker)
+	send_thread.daemon = True
+	send_thread.start()
