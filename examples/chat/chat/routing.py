@@ -7,6 +7,6 @@ import django_eventstream
 urlpatterns = [
 	url(r'^rooms/(?P<room_id>[^/]+)/events/', AuthMiddlewareStack(
 		URLRouter(django_eventstream.routing.urlpatterns)
-	), {'format-channels':['room-{room_id}']}),
+	), {'format-channels': ['room-{room_id}']}),
 	url(r'', AsgiHandler),
 ]
