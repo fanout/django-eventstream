@@ -8,8 +8,8 @@ Install dependencies, setup database, and create empty environment config:
 virtualenv --python=python3 venv
 . venv/bin/activate
 pip install -r requirements.txt
-python manage.py migrate
 touch .env
+python manage.py migrate
 ```
 
 Note: The `django_eventstream` library doesn't get installed and instead is loaded from within this repository by relative path.
