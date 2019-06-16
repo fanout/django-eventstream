@@ -1,5 +1,5 @@
 channels==2.1.5
 dj-database-url==0.5.0
-Django==2.1.7
+Django==2.1.9
 django-dotenv==1.4.2
 django-grip==2.0.0
