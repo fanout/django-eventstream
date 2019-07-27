@@ -3,7 +3,6 @@ import threading
 import asyncio
 import six
 from django.http import HttpResponseBadRequest
-from django.conf import settings
 from channels.generic.http import AsyncHttpConsumer
 from channels.http import AsgiRequest
 from channels.db import database_sync_to_async

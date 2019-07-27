@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.conf import settings
 from django.http import HttpResponseBadRequest
 from .utils import augment_cors_headers
 
