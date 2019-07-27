@@ -57,7 +57,9 @@ def sse_encode_event(event_type, data, event_id=None, escape=False):
 	out += 'data: %s\n\n' % data_str
 	return out
 
-def sse_error_response(condition, text, extra={}):
+def sse_error_response(condition, text, extra=None):
+	if extra is None:
+		extra = {}
 	data = {'condition': condition, 'text': text}
 	for k, v in six.iteritems(extra):
 		data[k] = v
@@ -65,8 +67,11 @@ def sse_error_response(condition, text, extra={}):
 	return HttpResponse(body, content_type='text/event-stream')
 
 def publish_event(channel, event_type, data, pub_id, pub_prev_id,
-		skip_user_ids=[]):
+		skip_user_ids=None):
 	from django_grip import publish
+
+	if skip_user_ids is None:
+		skip_user_ids = []
 
 	content_filters = []
 	if pub_id:

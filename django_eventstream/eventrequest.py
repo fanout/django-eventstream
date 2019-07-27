@@ -20,7 +20,10 @@ class EventRequest(object):
 	class ResumeNotAllowedError(Error):
 		pass
 
-	def __init__(self, http_request=None, channel_limit=10, view_kwargs={}):
+	def __init__(self, http_request=None, channel_limit=10, view_kwargs=None):
+		if view_kwargs is None:
+			view_kwargs = {}
+
 		self.channels = set()
 		self.channel_last_ids = {}
 		self.is_recover = False

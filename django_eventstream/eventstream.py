@@ -5,12 +5,17 @@ from .utils import make_id, publish_event, publish_kick, \
 	get_storage, get_channelmanager, have_channels
 
 class EventPermissionError(Exception):
-	def __init__(self, message, channels=[]):
+	def __init__(self, message, channels=None):
 		super(Exception, self).__init__(message)
+		if channels is None:
+			channels = []
 		self.channels = copy.deepcopy(channels)
 
-def send_event(channel, event_type, data, skip_user_ids=[]):
+def send_event(channel, event_type, data, skip_user_ids=None):
 	from .event import Event
+
+	if skip_user_ids is None:
+		skip_user_ids = []
 
 	storage = get_storage()
 	channelmanager = get_channelmanager()
