@@ -172,6 +172,7 @@ class EventsConsumer(AsyncHttpConsumer):
 
 		extra_headers = {}
 		extra_headers['Cache-Control'] = 'no-cache'
+		extra_headers['X-Accel-Buffering'] = 'no'
 		augment_cors_headers(extra_headers)
 
 		# if this was a grip request or we encountered an error, respond now
