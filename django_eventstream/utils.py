@@ -143,6 +143,11 @@ def get_channelmanager():
 		'EVENTSTREAM_CHANNELMANAGER_CLASS',
 		'django_eventstream.channelmanager.DefaultChannelManager')
 
+def add_default_headers(headers):
+	headers['Cache-Control'] = 'no-cache'
+	headers['X-Accel-Buffering'] = 'no'
+	augment_cors_headers(headers)
+
 def augment_cors_headers(headers):
 	cors_origin = ''
 	if hasattr(settings, 'EVENTSTREAM_ALLOW_ORIGIN'):

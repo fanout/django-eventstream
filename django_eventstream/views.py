@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.http import HttpResponseBadRequest
-from .utils import augment_cors_headers
+from .utils import add_default_headers
 
 def events(request, **kwargs):
 	from .eventrequest import EventRequest
@@ -35,8 +35,6 @@ def events(request, **kwargs):
 			str(e),
 			{'channels': e.channels})
 
-	response['Cache-Control'] = 'no-cache'
-
-	augment_cors_headers(response)
+	add_default_headers(response)
 
 	return response
