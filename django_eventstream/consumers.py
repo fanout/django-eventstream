@@ -6,7 +6,7 @@ from django.http import HttpResponseBadRequest
 from channels.generic.http import AsyncHttpConsumer
 from channels.http import AsgiRequest
 from channels.db import database_sync_to_async
-from .utils import augment_cors_headers
+from .utils import add_default_headers
 
 MAX_PENDING = 10
 
@@ -171,9 +171,7 @@ class EventsConsumer(AsyncHttpConsumer):
 					{'channels': e.channels})
 
 		extra_headers = {}
-		extra_headers['Cache-Control'] = 'no-cache'
-		extra_headers['X-Accel-Buffering'] = 'no'
-		augment_cors_headers(extra_headers)
+		add_default_headers(extra_headers)
 
 		# if this was a grip request or we encountered an error, respond now
 		if response:
