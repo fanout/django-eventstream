@@ -14,7 +14,7 @@ install_requires.extend(['PyJWT>=1.5,<2', 'gripcontrol>=3.1.0,<4', 'django_grip>
 
 setup(
 name='django-eventstream',
-version='2.5.0',
+version='2.6.0',
 description='Server-Sent Events for Django',
 long_description=readme,
 author='Justin Karneges',
