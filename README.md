@@ -326,6 +326,8 @@ EVENTSTREAM_CHANNELMANAGER_CLASS = 'myapp.channelmanager.MyChannelManager'
 
 Whenever permissions change, call `channel_permission_changed`. This will cause clients to be disconnected if they lost permission to the channel.
 
+Note: OAuth may not work with the `AuthMiddlewareStack` from Django Channels. See [this token middleware](https://gist.github.com/rluts/22e05ed8f53f97bdd02eafdf38f3d60a).
+
 ```py
 from django_eventstream import channel_permission_changed
 
