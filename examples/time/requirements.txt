@@ -1,5 +1,7 @@
-channels==2.1.5
+asgiref==3.2.3
+channels==2.3.1
+daphne==2.4.0
 dj-database-url==0.5.0
-Django==2.1.11
+Django==2.2.8
 django-dotenv==1.4.2
-django-grip==2.0.0
+django-grip==2.0.2
