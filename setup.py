@@ -10,7 +10,7 @@ install_requires = []
 if sys.version_info >= (3,5):
 	install_requires.append('channels>=2.1.2')
 
-install_requires.extend(['PyJWT>=1.5,<2', 'gripcontrol>=4.0,<5', 'django_grip>=2.0.0,<3', 'Werkzeug>=0.12,<1', 'six>=1.10,<2'])
+install_requires.extend(['PyJWT>=1.5,<2', 'gripcontrol>=4.0,<5', 'django_grip>=3.0,<4', 'Werkzeug>=0.12,<1', 'six>=1.10,<2'])
 
 setup(
 name='django-eventstream',
