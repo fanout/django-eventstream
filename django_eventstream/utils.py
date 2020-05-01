@@ -67,7 +67,7 @@ def sse_error_response(condition, text, extra=None):
 	return HttpResponse(body, content_type='text/event-stream')
 
 def publish_event(channel, event_type, data, pub_id, pub_prev_id,
-		skip_user_ids=None):
+		skip_user_ids=None, **publish_kwargs):
 	from django_grip import publish
 
 	if skip_user_ids is None:
@@ -88,7 +88,8 @@ def publish_event(channel, event_type, data, pub_id, pub_prev_id,
 		HttpStreamFormat(content, content_filters=content_filters),
 		id=pub_id,
 		prev_id=pub_prev_id,
-		meta=meta)
+		meta=meta,
+		**publish_kwargs)
 
 def publish_kick(user_id, channel):
 	from django_grip import publish

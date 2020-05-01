@@ -11,7 +11,7 @@ class EventPermissionError(Exception):
 			channels = []
 		self.channels = copy.deepcopy(channels)
 
-def send_event(channel, event_type, data, skip_user_ids=None):
+def send_event(channel, event_type, data, skip_user_ids=None, async_publish=True):
 	from .event import Event
 
 	if skip_user_ids is None:
@@ -41,7 +41,8 @@ def send_event(channel, event_type, data, skip_user_ids=None):
 		data,
 		pub_id,
 		pub_prev_id,
-		skip_user_ids=skip_user_ids)
+		skip_user_ids=skip_user_ids,
+		blocking=(not async_publish))
 
 def get_events(request, limit=100, user=None):
 	if user is None:
