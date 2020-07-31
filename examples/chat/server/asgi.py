@@ -8,10 +8,13 @@ import sys
 
 filepath = os.path.abspath(__file__)
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(filepath)))))
+sys.path.append(
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(filepath)))))
 
 import dotenv
-dotenv.read_dotenv(os.path.join(os.path.dirname(os.path.dirname(filepath)), '.env'))
+dotenv.read_dotenv(
+    os.path.join(os.path.dirname(os.path.dirname(filepath)), '.env'))
 
 import django
 from channels.routing import get_default_application

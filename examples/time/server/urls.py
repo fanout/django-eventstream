@@ -1,5 +1,5 @@
 from django.urls import include, path
 
 urlpatterns = [
-	path('', include('timeapp.urls')),
+    path('', include('timeapp.urls')),
 ]

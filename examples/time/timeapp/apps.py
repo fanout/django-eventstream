@@ -14,6 +14,7 @@ class TimeappConfig(AppConfig):
 
 worker_started = False
 
+
 def ensure_worker_started():
     global worker_started
 
@@ -29,11 +30,13 @@ def ensure_worker_started():
     thread.daemon = True
     thread.start()
 
+
 def send_worker():
     while True:
         data = datetime.datetime.utcnow().isoformat()
         send_event('time', 'message', data)
         time.sleep(1)
+
 
 def is_db_ready():
     from django.db import DatabaseError
