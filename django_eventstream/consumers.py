@@ -139,6 +139,9 @@ class EventsConsumer(AsyncHttpConsumer):
 		if 'user' in self.scope:
 			request.user = self.scope['user']
 
+		if 'session' in self.scope:
+			request.session = self.scope['session']
+
 		try:
 			event_request = await self.parse_request(request)
 			response = None
