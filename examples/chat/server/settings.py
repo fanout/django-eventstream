@@ -127,7 +127,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = 'staticfiles'
 
-ASGI_APPLICATION = 'server.routing.application'
+ASGI_APPLICATION = 'server.asgi.application'
 
 GRIP_URL = os.environ.get('GRIP_URL')
 
