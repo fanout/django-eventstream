@@ -36,16 +36,21 @@ Features:
 
 ## Requirements
 
-This library requires one or both of:
+This library requires either:
 
-* [Django Channels 2](https://channels.readthedocs.io/en/latest/) (for asynchronous connection handling, needs Python 3.5+).
-* A GRIP-compatible proxy such as [Pushpin](https://pushpin.org) or [Fanout Cloud](https://fanout.io) (will work with any Python version including 2.x).
+* [Django Channels 3](https://channels.readthedocs.io/en/latest/), for native asynchronous connection handling (needs Python 3.6+).
+
+*or*
+
+* A GRIP-compatible proxy such as [Pushpin](https://pushpin.org) or [Fanout Cloud](https://fanout.io/cloud/), for delegating the connection handling and keeping the Django app stateless.
+
+Note that it is possible to combine the two. If the app is set up with Channels and a connection arrives through a GRIP proxy, then the handling will be delegated.
 
 ## Setup
 
-If you're using Python 3.5 or later, we recommend setting up your project with Channels as this will give you the most flexibility, including being able to run standalone or with `runserver`. You can always [add Pushpin/Fanout](#multiple-instances-and-scaling) afterwards for high availability or scale.
+We recommend setting up your project with Channels as this will give you the most flexibility, including being able to run standalone or with `runserver`.
 
-For Python versions earlier than 3.5, see [Setup without Channels](#setup-without-channels).
+Otherwise, see [Setup without Channels](#setup-without-channels).
 
 ### Setup with Channels
 
@@ -74,43 +79,9 @@ MIDDLEWARE = [
 ]
 ```
 
-Channels introduces an entirely separate routing system for handling async connections. Routes are declared in `routing.py` files instead of `urls.py` files, and you declare an [ASGI](https://channels.readthedocs.io/en/latest/asgi.html) application instead of (or in addition to) a WSGI application.
+Channels introduces an entirely separate routing system for handling async connections. You'll need to declare an [ASGI](https://channels.readthedocs.io/en/latest/asgi.html) application instead of (or in addition to) a WSGI application.
 
-Create a `routing.py` file in one of your Django app dirs, with an endpoint declared:
-
-```py
-from django.conf.urls import url
-from channels.routing import URLRouter
-from channels.http import AsgiHandler
-from channels.auth import AuthMiddlewareStack
-import django_eventstream
-
-urlpatterns = [
-    url(r'^events/', AuthMiddlewareStack(
-        URLRouter(django_eventstream.routing.urlpatterns)
-    ), {'channels': ['test']}),
-    url(r'', AsgiHandler),
-]
-```
-
-Then, ensure you have a master `routing.py` file in your project dir (next to `settings.py`) that routes to the app's `routing` module from the previous step:
-
-```py
-from channels.routing import ProtocolTypeRouter, URLRouter
-import your_app.routing
-
-application = ProtocolTypeRouter({
-    'http': URLRouter(your_app.routing.urlpatterns),
-})
-```
-
-Set `ASGI_APPLICATION` in your `settings.py` file to your project's `routing` module:
-
-```py
-ASGI_APPLICATION = 'your_project.routing.application'
-```
-
-Finally, create an `asgi.py` file in your project dir. It's similar to your `wsgi.py`:
+For example, create an `asgi.py` file in your Django project dir (next to `settings.py`) with an endpoint declared:
 
 ```py
 """
@@ -120,11 +91,28 @@ defined in the ASGI_APPLICATION setting.
 
 import os
 import django
-from channels.routing import get_default_application
+from django.core.asgi import get_asgi_application
+from django.conf.urls import url
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
+import django_eventstream
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "your_project.settings")
-django.setup()
-application = get_default_application()
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "server.settings")
+
+application = ProtocolTypeRouter({
+    'http': URLRouter([
+        url(r'^events/', AuthMiddlewareStack(
+            URLRouter(django_eventstream.routing.urlpatterns)
+        ), { 'channels': ['test'] }),
+        url(r'', get_asgi_application()),
+    ]),
+})
+```
+
+Then set `ASGI_APPLICATION` in your `settings.py` file to your project's `asgi` module:
+
+```py
+ASGI_APPLICATION = 'your_project.asgi.application'
 ```
 
 For more information about setting up Channels in general, see the [Channels Documentation](http://channels.readthedocs.io/en/latest/tutorial/part_1.html#integrate-the-channels-library).
@@ -153,7 +141,7 @@ See the [Channels Documentation](https://channels.readthedocs.io/en/latest/deplo
 
 ### Multiple instances and scaling
 
-If you need to run multiple instances of your Django project for high availability, or need to push data from management commands, or need to be able to scale to a large number of connections, you can introduce a GRIP proxy layer (such as [Pushpin](https://pushpin.org) or [Fanout Cloud](https://fanout.io)) into your architecture.
+If you need to run multiple instances of your Django project for high availability, or need to push data from management commands, or need to be able to scale to a large number of connections, you can introduce a GRIP proxy layer (such as [Pushpin](https://pushpin.org) or [Fanout Cloud](https://fanout.io/cloud/)) into your architecture.
 
 In your `settings.py`, set `GRIP_URL` with your proxy settings:
 
@@ -165,7 +153,7 @@ Then configure the proxy to forward traffic to your project. E.g. with Fanout Cl
 
 ### Setup without Channels
 
-It is possible to use this library with a GRIP proxy only, without setting up Channels. This can be useful if your Python version doesn't support Channels.
+It is possible to use this library with a GRIP proxy only, without setting up Channels.
 
 First, install this module:
 
