@@ -1,5 +1,4 @@
 import os
-import sys
 from setuptools import setup
 
 with open(os.path.join(os.path.dirname(__file__), 'README.md')) as f:
@@ -7,14 +6,11 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md')) as f:
 
 install_requires = []
 
-if sys.version_info >= (3,5):
-	install_requires.append('channels>=2.1.2')
-
 install_requires.extend(['PyJWT>=1.5,<2', 'gripcontrol>=4.0,<5', 'django_grip>=3.0,<4', 'Werkzeug>=0.12,<1', 'six>=1.10,<2'])
 
 setup(
 name='django-eventstream',
-version='3.1.0',
+version='4.0.0',
 description='Server-Sent Events for Django',
 long_description=readme,
 long_description_content_type='text/markdown',
