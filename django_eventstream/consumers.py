@@ -89,11 +89,12 @@ def get_listener_manager():
 
 class EventsConsumer(AsyncHttpConsumer):
 	# this function adapted from channels 2.1.5
-	async def __call__(self, receive, send):
+	async def __call__(self, scope, receive, send):
 		"""
 		Async entrypoint - concatenates body fragments and hands off control
 		to ``self.handle`` when the body has been completely received.
 		"""
+		self.scope = scope
 		self.send = send
 		body = []
 		try:
