@@ -54,10 +54,10 @@ Otherwise, see [Setup without Channels](#setup-without-channels).
 
 ### Setup with Channels
 
-First, install this module:
+First, install this module and the channels module:
 
 ```sh
-pip install django-eventstream
+pip install django-eventstream channels
 ```
 
 Add the `channels` and `django_eventstream` apps to your `settings.py`:
