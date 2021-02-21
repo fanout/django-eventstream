@@ -22,7 +22,7 @@ zip_safe=False,
 packages=['django_eventstream', 'django_eventstream.migrations', 'django_eventstream.management', 'django_eventstream.management.commands'],
 package_data={'django_eventstream': ['static/django_eventstream/*']},
 install_requires=install_requires,
-tests_require=['Django'],
+tests_require=['Django>=2.0'],
 test_suite='tests.runtests.runtests',
 classifiers=[
 	'Development Status :: 4 - Beta',
