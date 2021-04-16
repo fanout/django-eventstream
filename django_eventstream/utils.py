@@ -150,17 +150,17 @@ def add_default_headers(headers):
 	augment_cors_headers(headers)
 
 def augment_cors_headers(headers):
-	cors_origin = ''
-	if hasattr(settings, 'EVENTSTREAM_ALLOW_ORIGIN'):
-		cors_origin = settings.EVENTSTREAM_ALLOW_ORIGIN
+	cors_origin = getattr(settings, 'EVENTSTREAM_ALLOW_ORIGIN', '')
 
 	if cors_origin:
 		headers['Access-Control-Allow-Origin'] = cors_origin
 
-	allow_credentials = False
-	if hasattr(settings, 'EVENTSTREAM_ALLOW_CREDENTIALS'):
-		allow_credentials = settings.EVENTSTREAM_ALLOW_CREDENTIALS
+	allow_credentials = getattr(settings, 'EVENTSTREAM_ALLOW_CREDENTIALS', False)
 
 	if allow_credentials:
 		headers['Access-Control-Allow-Credentials'] = 'true'
 
+	allow_headers = getattr(settings, 'EVENTSTREAM_ALLOW_HEADERS', '')
+
+	if allow_headers:
+		headers['Access-Control-Allow-Headers'] = allow_headers
