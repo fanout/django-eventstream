@@ -70,8 +70,8 @@ class EventResponse(object):
 			'channels': list(self.channel_items.keys()),
 			'user': user_id
 		}
-		params['es-meta'] = jwt.encode(es_meta,
-				settings.SECRET_KEY.encode('utf-8'))
+		params['es-meta'] = six.ensure_text(jwt.encode(es_meta,
+				settings.SECRET_KEY.encode('utf-8')))
 		next_uri = http_request.path + '?' + params.urlencode()
 
 		instruct = http_request.grip.start_instruct()

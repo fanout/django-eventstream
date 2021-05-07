@@ -41,7 +41,7 @@ class EventRequest(object):
 
 		es_meta = {}
 		if http_request.GET.get('es-meta'):
-			es_meta = jwt.decode(http_request.GET['es-meta'], settings.SECRET_KEY.encode('utf-8'))
+			es_meta = jwt.decode(http_request.GET['es-meta'], settings.SECRET_KEY.encode('utf-8'), algorithms=['HS256'])
 			if int(time.time()) >= es_meta['exp']:
 				raise ValueError('es-meta signature is expired')
 
