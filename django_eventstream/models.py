@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.db import IntegrityError, models, transaction
 
 class EventCounter(models.Model):
+	id = models.AutoField(primary_key=True, serialize=False, verbose_name='ID')
 	name = models.CharField(max_length=255, unique=True)
 	value = models.BigIntegerField(default=0)
 	updated = models.DateTimeField(db_index=True, auto_now=True)
@@ -21,6 +22,7 @@ class EventCounter(models.Model):
 		return en
 
 class Event(models.Model):
+	id = models.AutoField(primary_key=True, serialize=False, verbose_name='ID')
 	channel = models.CharField(max_length=255, db_index=True)
 	type = models.CharField(max_length=255, db_index=True)
 	data = models.TextField()
