@@ -6,7 +6,7 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md')) as f:
 
 install_requires = []
 
-install_requires.extend(['PyJWT>=1.5,<3', 'gripcontrol>=4.0,<5', 'django_grip>=3.0,<4', 'Werkzeug>=0.12,<1', 'six>=1.10,<2'])
+install_requires.extend(['PyJWT>=1.5,<3', 'gripcontrol>=4.0,<5', 'django_grip>=3.0,<4', 'six>=1.10,<2'])
 
 setup(
 name='django-eventstream',
