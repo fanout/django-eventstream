@@ -10,7 +10,7 @@ install_requires.extend(['PyJWT>=1.5,<3', 'gripcontrol>=4.0,<5', 'django_grip>=3
 
 setup(
 name='django-eventstream',
-version='4.3.0',
+version='4.3.1',
 description='Server-Sent Events for Django',
 long_description=readme,
 long_description_content_type='text/markdown',
