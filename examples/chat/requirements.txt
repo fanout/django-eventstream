@@ -2,6 +2,6 @@ asgiref==3.3.1
 channels==3.0.3
 daphne==3.0.1
 dj-database-url==0.5.0
-Django==3.1.12
+Django==3.1.13
 django-dotenv==1.4.2
 django-grip==3.0.0
