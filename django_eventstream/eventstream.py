@@ -11,7 +11,7 @@ class EventPermissionError(Exception):
 			channels = []
 		self.channels = copy.deepcopy(channels)
 
-def send_event(channel, event_type, data, skip_user_ids=None, async_publish=True, JSON_ENCODE=True):
+def send_event(channel, event_type, data, skip_user_ids=None, async_publish=True, json_encode=True):
 	from .event import Event
 
 	if skip_user_ids is None:
@@ -43,7 +43,7 @@ def send_event(channel, event_type, data, skip_user_ids=None, async_publish=True
 		pub_prev_id,
 		skip_user_ids=skip_user_ids,
 		blocking=(not async_publish),
-		JSON_ENCODE=JSON_ENCODE)
+		json_encode=json_encode)
 
 def get_events(request, limit=100, user=None):
 	if user is None:
