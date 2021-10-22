@@ -47,7 +47,7 @@ def build_id_escape(s):
 	return out
 
 def sse_encode_event(event_type, data, event_id=None, escape=False, json_encode=True):
-	if json_encode = True:
+	if json_encode:
 		data_str = json.dumps(data, cls=DjangoJSONEncoder)
 	else:
 		data_str = data
@@ -82,7 +82,7 @@ def publish_event(channel, event_type, data, pub_id, pub_prev_id,
 		content_filters.append('build-id')
 	else:
 		event_id = None
-	content = sse_encode_event(event_type, data, event_id=event_id, escape=bool(pub_id), json_encode=bool(json_encode))
+	content = sse_encode_event(event_type, data, event_id=event_id, escape=bool(pub_id), json_encode=json_encode)
 	meta = {}
 	if skip_user_ids:
 		meta['skip_users'] = ','.join(skip_user_ids)
