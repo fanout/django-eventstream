@@ -12,12 +12,16 @@ MAX_PENDING = 10
 
 class Listener(object):
 	def __init__(self):
+		self.loop = asyncio.get_event_loop()
 		self.aevent = asyncio.Event()
 		self.user_id = ''
 		self.channels = set()
 		self.channel_items = {}
 		self.overflow = False
 		self.error = ''
+
+	def wake_threadsafe(self):
+		self.loop.call_soon_threadsafe(self.aevent.set)
 
 class ListenerManager(object):
 	def __init__(self):
@@ -63,7 +67,7 @@ class ListenerManager(object):
 				else:
 					l.overflow = True
 			for l in wake:
-				l.aevent.set()
+				l.wake_threadsafe()
 		finally:
 			self.lock.release()
 
@@ -78,7 +82,7 @@ class ListenerManager(object):
 					l.error = {'condition': 'forbidden', 'text': msg, 'channels': [channel]}
 					wake.append(l)
 			for l in wake:
-				l.aevent.set()
+				l.wake_threadsafe()
 		finally:
 			self.lock.release()
 
