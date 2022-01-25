@@ -133,8 +133,11 @@ class EventsConsumer(AsyncHttpConsumer):
 		self.listener = None
 
 		request = AsgiRequest(self.scope, body)
-
-		gm = GripMiddleware()
+		
+		def dummy_get_response(request):
+		    return None
+		
+		gm = GripMiddleware(dummy_get_response)
 		gm.process_request(request)
 
 		if 'user' in self.scope:
