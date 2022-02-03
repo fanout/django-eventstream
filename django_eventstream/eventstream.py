@@ -107,6 +107,8 @@ def get_events(request, limit=100, user=None):
 		if reset:
 			resp.channel_reset.add(channel)
 		if more:
+			last_id_before_limit = events[-1].id
+			request.channel_last_ids[channel] = last_id_before_limit
 			resp.channel_more.add(channel)
 	return resp
 
