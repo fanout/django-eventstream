@@ -1,4 +1,6 @@
 import copy
+import json
+from django.core.serializers.json import DjangoJSONEncoder
 from .storage import EventDoesNotExist
 from .eventresponse import EventResponse
 from .utils import make_id, publish_event, publish_kick, \
@@ -13,6 +15,9 @@ class EventPermissionError(Exception):
 
 def send_event(channel, event_type, data, skip_user_ids=None, async_publish=True, json_encode=True):
 	from .event import Event
+
+	if json_encode:
+		data = json.dumps(data, cls=DjangoJSONEncoder)
 
 	if skip_user_ids is None:
 		skip_user_ids = []
@@ -42,8 +47,7 @@ def send_event(channel, event_type, data, skip_user_ids=None, async_publish=True
 		pub_id,
 		pub_prev_id,
 		skip_user_ids=skip_user_ids,
-		blocking=(not async_publish),
-		json_encode=json_encode)
+		blocking=(not async_publish))
 
 def get_events(request, limit=100, user=None):
 	if user is None:
