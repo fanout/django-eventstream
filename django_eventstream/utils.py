@@ -46,18 +46,14 @@ def build_id_escape(s):
 			out += c
 	return out
 
-def sse_encode_event(event_type, data, event_id=None, escape=False, json_encode=True):
-	if json_encode:
-		data_str = json.dumps(data, cls=DjangoJSONEncoder)
-	else:
-		data_str = data
+def sse_encode_event(event_type, data, event_id=None, escape=False):
 	if escape:
 		event_type = build_id_escape(event_type)
-		data_str = build_id_escape(data_str)
+		data = build_id_escape(data)
 	out = 'event: %s\n' % event_type
 	if event_id:
 		out += 'id: %s\n' % event_id
-	out += 'data: %s\n\n' % data_str
+	out += 'data: %s\n\n' % data
 	return out
 
 def sse_error_response(condition, text, extra=None):
@@ -66,11 +62,12 @@ def sse_error_response(condition, text, extra=None):
 	data = {'condition': condition, 'text': text}
 	for k, v in six.iteritems(extra):
 		data[k] = v
+	data = json.dumps(data, cls=DjangoJSONEncoder)
 	body = sse_encode_event('stream-error', data, event_id='error')
 	return HttpResponse(body, content_type='text/event-stream')
 
 def publish_event(channel, event_type, data, pub_id, pub_prev_id,
-		skip_user_ids=None, json_encode=True, **publish_kwargs):
+		skip_user_ids=None, **publish_kwargs):
 	from django_grip import publish
 
 	if skip_user_ids is None:
@@ -82,7 +79,7 @@ def publish_event(channel, event_type, data, pub_id, pub_prev_id,
 		content_filters.append('build-id')
 	else:
 		event_id = None
-	content = sse_encode_event(event_type, data, event_id=event_id, escape=bool(pub_id), json_encode=json_encode)
+	content = sse_encode_event(event_type, data, event_id=event_id, escape=bool(pub_id))
 	meta = {}
 	if skip_user_ids:
 		meta['skip_users'] = ','.join(skip_user_ids)
