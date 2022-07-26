@@ -18,7 +18,7 @@ dotenv.read_dotenv(
 
 import django
 from django.core.asgi import get_asgi_application
-from django.conf.urls import url
+from django.urls import path, re_path
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 import django_eventstream
@@ -27,9 +27,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "server.settings")
 
 application = ProtocolTypeRouter({
     'http': URLRouter([
-        url(r'^events/', AuthMiddlewareStack(URLRouter(
+        path('events/', AuthMiddlewareStack(URLRouter(
             django_eventstream.routing.urlpatterns
         )), { 'channels': ['time'] }),
-        url(r'', get_asgi_application()),
+        re_path(r'', get_asgi_application()),
     ]),
 })

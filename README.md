@@ -92,7 +92,7 @@ defined in the ASGI_APPLICATION setting.
 import os
 import django
 from django.core.asgi import get_asgi_application
-from django.conf.urls import url
+from django.urls import path, re_path
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 import django_eventstream
@@ -101,10 +101,10 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "server.settings")
 
 application = ProtocolTypeRouter({
     'http': URLRouter([
-        url(r'^events/', AuthMiddlewareStack(
+        path('events/', AuthMiddlewareStack(
             URLRouter(django_eventstream.routing.urlpatterns)
         ), { 'channels': ['test'] }),
-        url(r'', get_asgi_application()),
+        re_path(r'', get_asgi_application()),
     ]),
 })
 ```
@@ -196,12 +196,12 @@ GRIP_URL = 'http://api.fanout.io/realm/your-realm?iss=your-realm&key=base64:your
 Add an endpoint in `urls.py`:
 
 ```py
-from django.conf.urls import url, include
+from django.urls import path, include
 import django_eventstream
 
 urlpatterns = [
     ...
-    url(r'^events/', include(django_eventstream.urls), {'channels': ['test']}),
+    path('events/', include(django_eventstream.urls), {'channels': ['test']}),
 ]
 ```
 
@@ -330,17 +330,17 @@ Examples:
 
 ```py
 # specify fixed list of channels
-url(r'^foo/events/', include(django_eventstream.urls), {'channels': ['foo']})
+path('foo/events/', include(django_eventstream.urls), {'channels': ['foo']})
 
 # specify a list of dynamic channels using formatting based on view keywords
-url(r'^objects/(?P<obj_id>\w+)/events/', include(django_eventstream.urls),
+path('objects/<obj_id>/events/', include(django_eventstream.urls),
     {'format-channels': ['object-{obj_id}']})
 
 # client selects a single channel using a path component
-url(r'^events/(?P<channel>\w+)/', include(django_eventstream.urls))
+path('events/<channel>/', include(django_eventstream.urls))
 
 # client selects one or more channels using query parameters
-url(r'^events/', include(django_eventstream.urls))
+path('events/', include(django_eventstream.urls))
 ```
 
 Note that if view keywords or a channel path component are used, the client cannot use query parameters to select channels.
