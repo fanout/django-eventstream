@@ -79,6 +79,8 @@ MIDDLEWARE = [
 ]
 ```
 
+The middleware is part of the [django-grip library](https://github.com/fanout/django-grip.git), which should have been pulled in automatically as a dependency of this module.
+
 Channels introduces an entirely separate routing system for handling async connections. You'll need to declare an [ASGI](https://channels.readthedocs.io/en/latest/asgi.html) application instead of (or in addition to) a WSGI application.
 
 For example, create an `asgi.py` file in your Django project dir (next to `settings.py`) with an endpoint declared:
@@ -180,6 +182,8 @@ MIDDLEWARE = [
     ...
 ]
 ```
+
+The middleware is part of the [django-grip library](https://github.com/fanout/django-grip.git), which should have been pulled in automatically as a dependency of this module.
 
 Set `GRIP_URL` with your Pushpin or Fanout Cloud settings:
 
