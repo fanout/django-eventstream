@@ -38,7 +38,7 @@ Features:
 
 This library requires either:
 
-* [Django Channels 3](https://channels.readthedocs.io/en/latest/), for native asynchronous connection handling (needs Python 3.6+).
+* [Django Channels 3](https://channels.readthedocs.io/en/latest/), for native asynchronous connection handling.
 
 *or*
 
