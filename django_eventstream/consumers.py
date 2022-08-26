@@ -232,7 +232,7 @@ class EventsConsumer(AsyncHttpConsumer):
 		from .eventstream import EventPermissionError
 		from .utils import sse_encode_event, make_id
 
-		self.listener.user_id = event_request.user.id if event_request.user else 'anonymous'
+		self.listener.user_id = event_request.user.pk if event_request.user else 'anonymous'
 		self.listener.channels = event_request.channels
 
 		lm = get_listener_manager()
