@@ -46,7 +46,9 @@ def build_id_escape(s):
 			out += c
 	return out
 
-def sse_encode_event(event_type, data, event_id=None, escape=False):
+def sse_encode_event(event_type, data, event_id=None, escape=False, json_encode=False):
+	if json_encode:
+		data = json.dumps(data, cls=DjangoJSONEncoder)
 	if escape:
 		event_type = build_id_escape(event_type)
 		data = build_id_escape(data)
@@ -56,15 +58,16 @@ def sse_encode_event(event_type, data, event_id=None, escape=False):
 	out += 'data: %s\n\n' % data
 	return out
 
-def sse_error_response(condition, text, extra=None):
+def sse_encode_error(condition, text, extra=None):
 	if extra is None:
 		extra = {}
 	data = {'condition': condition, 'text': text}
 	for k, v in six.iteritems(extra):
 		data[k] = v
-	data = json.dumps(data, cls=DjangoJSONEncoder)
-	body = sse_encode_event('stream-error', data, event_id='error')
-	return HttpResponse(body, content_type='text/event-stream')
+	return sse_encode_event('stream-error', data, event_id='error', json_encode=True)
+
+def sse_error_response(condition, text, extra=None):
+	return HttpResponse(sse_encode_error(condition, text, extra=extra), content_type='text/event-stream')
 
 def publish_event(channel, event_type, data, pub_id, pub_prev_id,
 		skip_user_ids=None, **publish_kwargs):

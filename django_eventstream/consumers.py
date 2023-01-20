@@ -6,7 +6,7 @@ from django.http import HttpResponseBadRequest
 from channels.generic.http import AsyncHttpConsumer
 from channels.http import AsgiRequest
 from channels.db import database_sync_to_async
-from .utils import add_default_headers
+from .utils import add_default_headers, sse_encode_error
 
 MAX_PENDING = 10
 
@@ -79,7 +79,7 @@ class ListenerManager(object):
 			for l in listeners:
 				if l.user_id == user_id:
 					msg = 'Permission denied to channels: %s' % channel
-					l.error = {'condition': 'forbidden', 'text': msg, 'channels': [channel]}
+					l.error = {'condition': 'forbidden', 'text': msg, 'extra': {'channels': [channel]}}
 					wake.append(l)
 			for l in wake:
 				l.wake_threadsafe()
@@ -245,12 +245,7 @@ class EventsConsumer(AsyncHttpConsumer):
 			try:
 				event_response = await self.get_events(event_request)
 			except EventPermissionError as e:
-				data = {
-					'condition': 'forbidden',
-					'text': str(e),
-					'channels': e.channels,
-				}
-				body = sse_encode_event('stream-error', data, event_id='error')
+				body = sse_encode_error('forbidden', str(e), extra={'channels': e.channels})
 				await self.send_body(body.encode('utf-8'))
 				break
 
@@ -270,7 +265,8 @@ class EventsConsumer(AsyncHttpConsumer):
 				body += sse_encode_event(
 					'stream-reset',
 					{'channels': list(event_response.channel_reset)},
-					event_id=event_id)
+					event_id=event_id,
+					json_encode=True)
 
 			for channel, items in event_response.channel_items.items():
 				for item in items:
@@ -348,7 +344,10 @@ class EventsConsumer(AsyncHttpConsumer):
 				more = True
 
 				if error_data:
-					body += sse_encode_event('stream-error', error_data, event_id='error')
+					condition = error_data['condition']
+					text = error_data['text']
+					extra = error_data.get('extra')
+					body += sse_encode_error(condition, text, extra=extra)
 					more = False
 
 				if body or not more:

@@ -36,7 +36,8 @@ class EventResponse(object):
 			body += sse_encode_event(
 				'stream-reset',
 				{'channels': list(self.channel_reset)},
-				event_id=event_id)
+				event_id=event_id,
+				json_encode=True)
 
 		for channel, items in six.iteritems(self.channel_items):
 			for item in items:
