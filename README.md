@@ -221,6 +221,28 @@ send_event('test', 'message', {'text': 'hello world'})
 
 The first argument is the channel to send on, the second is the event type, and the third is the event data. The data will be JSON-encoded using `DjangoJSONEncoder`.
 
+### PushPin configuration
+
+As mentioned in the [Getting Started](https://pushpin.org/docs/getting-started/#quickstart) documentation, PushPin is intended to sit *before* your Django server, proxying all requests through it.
+
+In order for PushPin to correctly manage the `django-eventstream` session URLs, you need to do two things:
+
+1. Configure PushPin to route all the requests to your backend server, by adding something like this to the `routes` file (usually `/etc/pushpin/routes/`):
+
+```
+* localhost:8000 # Replace `localhost:8000` with your server's URL and port
+```
+
+2. Configure your consumers to connect to the *PushPin* port (by default it is `:7999`). PushPin will forward all requests to your backend. You can usually do this with a proxy like `nginx` with a configuration similar to:
+
+```
+location /api/ {
+    proxy_pass http://localhost:7999;
+}
+```
+
+The `location` block above will pass all requests coming on on `/api/` to your PushPin server.
+
 ## Local development without Channels
 
 If you're developing locally without Channels and want to test with Fanout Cloud, we recommend using [ngrok](https://ngrok.com/) to register a public host that routes to your local instance.
