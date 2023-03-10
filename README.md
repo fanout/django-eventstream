@@ -42,7 +42,7 @@ This library requires either:
 
 *or*
 
-* A GRIP-compatible proxy such as [Pushpin](https://pushpin.org) or [Fanout Cloud](https://fanout.io/cloud/), for delegating the connection handling and keeping the Django app stateless.
+* A GRIP-compatible proxy such as [Pushpin](https://pushpin.org) or [Fastly Fanout](https://developer.fastly.com/learning/concepts/real-time-messaging/fanout/), for delegating the connection handling and keeping the Django app stateless.
 
 Note that it is possible to combine the two. If the app is set up with Channels and a connection arrives through a GRIP proxy, then the handling will be delegated.
 
@@ -143,15 +143,33 @@ See the [Channels Documentation](https://channels.readthedocs.io/en/latest/deplo
 
 ### Multiple instances and scaling
 
-If you need to run multiple instances of your Django project for high availability, or need to push data from management commands, or need to be able to scale to a large number of connections, you can introduce a GRIP proxy layer (such as [Pushpin](https://pushpin.org) or [Fanout Cloud](https://fanout.io/cloud/)) into your architecture.
+If you need to run multiple instances of your Django app for high availability or scalability, or need to push data from management commands, then you can introduce a GRIP proxy layer such as [Pushpin](https://pushpin.org) or [Fastly Fanout](https://developer.fastly.com/learning/concepts/real-time-messaging/fanout/) into your architecture. Otherwise, events originating from an instance will only be delivered to clients connected to that instance.
 
-In your `settings.py`, set `GRIP_URL` with your proxy settings:
+For example, to use Pushpin with your app, you need to do three things:
+
+1. In your `settings.py`, set `GRIP_URL` to reference Pushpin's private control port:
 
 ```py
-GRIP_URL = 'http://api.fanout.io/realm/your-realm?iss=your-realm&key=base64:your-realm-key'
+GRIP_URL = 'http://localhost:5561'
 ```
 
-Then configure the proxy to forward traffic to your project. E.g. with Fanout Cloud, set the `host:port` of your deployed project as your realm's Origin Server, and have clients connect to your realm's domain.
+2. Configure Pushpin to route requests to your app, by adding something like this to Pushpin's `routes` file (usually `/etc/pushpin/routes`):
+
+```
+* localhost:8000 # Replace `localhost:8000` with your app's URL and port
+```
+
+3. Configure your consuming clients to connect to the Pushpin port (by default this is port 7999). Pushpin will forward requests to your app and handle streaming connections on its behalf.
+
+If you would normally use a load balancer in front of your app, it should be configured to forward requests to Pushpin instead of your app. For example, if you are using Nginx you could have configuration similar to:
+
+```
+location /api/ {
+    proxy_pass http://localhost:7999
+}
+```
+
+The `location` block above will pass all requests coming on `/api/` to Pushpin.
 
 ### Setup without Channels
 
@@ -185,16 +203,11 @@ MIDDLEWARE = [
 
 The middleware is part of [django-grip](https://github.com/fanout/django-grip), which should have been pulled in automatically as a dependency of this module.
 
-Set `GRIP_URL` with your Pushpin or Fanout Cloud settings:
+Set `GRIP_URL` with your Pushpin settings:
 
 ```py
 # pushpin
 GRIP_URL = 'http://localhost:5561'
-```
-
-```py
-# fanout cloud
-GRIP_URL = 'http://api.fanout.io/realm/your-realm?iss=your-realm&key=base64:your-realm-key'
 ```
 
 Add an endpoint in `urls.py`:
@@ -220,59 +233,6 @@ send_event('test', 'message', {'text': 'hello world'})
 ```
 
 The first argument is the channel to send on, the second is the event type, and the third is the event data. The data will be JSON-encoded using `DjangoJSONEncoder`.
-
-### PushPin configuration
-
-As mentioned in the [Getting Started](https://pushpin.org/docs/getting-started/#quickstart) documentation, PushPin is intended to sit *before* your Django server, proxying all requests through it.
-
-In order for PushPin to correctly manage the `django-eventstream` session URLs, you need to do two things:
-
-1. Configure PushPin to route all the requests to your backend server, by adding something like this to the `routes` file (usually `/etc/pushpin/routes/`):
-
-```
-* localhost:8000 # Replace `localhost:8000` with your server's URL and port
-```
-
-2. Configure your consumers to connect to the *PushPin* port (by default it is `:7999`). PushPin will forward all requests to your backend. You can usually do this with a proxy like `nginx` with a configuration similar to:
-
-```
-location /api/ {
-    proxy_pass http://localhost:7999;
-}
-```
-
-The `location` block above will pass all requests coming on on `/api/` to your PushPin server.
-
-## Local development without Channels
-
-If you're developing locally without Channels and want to test with Fanout Cloud, we recommend using [ngrok](https://ngrok.com/) to register a public host that routes to your local instance.
-
-As a convenience, this module comes with a Django command `runserver_ngrok` that acts like `runserver` except it additionally configures your Fanout Cloud realm to use a detected tunnel as the origin server.
-
-From a separate shell, run `ngrok`:
-
-```sh
-ngrok http 8000
-```
-
-Then run the `runserver_ngrok` command:
-
-```sh
-python manage.py runserver_ngrok
-```
-
-You should see output like this:
-
-```
-Setting ngrok tunnel 4f91f84e.ngrok.io as GRIP origin
-...
-Starting development server at http://127.0.0.1:8000/
-Quit the server with CONTROL-C.
-```
-
-Note that it may take a minute or so for the changes to take effect.
-
-Now if you make client requests to your realm's domain (e.g. `{realm-id}.fanoutcdn.com`) they will be routed to your local instance.
 
 ## Event storage
 
