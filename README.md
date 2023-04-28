@@ -168,8 +168,36 @@ location /api/ {
     proxy_pass http://localhost:7999
 }
 ```
-
 The `location` block above will pass all requests coming on `/api/` to Pushpin.
+
+
+
+If you use path_beg and replace_beg to modify the path in the pushpin routes file you need to configure eventstream to build the correct GRIP next link.
+For example, a pushpin route like this will match requests starting with /foo and remove '/foo' from the request to your django app.
+
+Pushpin route:
+```
+*,path_beg=/foo,replace_beg= localhost:8000
+```
+
+pushpin request url:
+```
+http://localhost:7999/foo/events/bar/
+```
+
+Django urls.py:
+```
+urlpatterns = [
+    path('events/<channel>/', include(django_eventstream.urls))
+]
+```
+
+use EVENTSTREAM_PATH_PREPEND in settings.py so that the GRIP next link is built correctly:
+```
+EVENTSTREAM_PATH_PREPEND = '/foo'
+```
+
+
 
 ### Setup without Channels
 

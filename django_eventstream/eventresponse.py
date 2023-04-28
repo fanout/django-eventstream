@@ -5,7 +5,7 @@ import six
 from gripcontrol import Channel
 from django.conf import settings
 from django.http import HttpResponse
-from .utils import sse_encode_event, make_id, build_id_escape
+from .utils import sse_encode_event, make_id, build_id_escape, build_next_uri
 
 try:
 	from urllib import quote
@@ -71,9 +71,9 @@ class EventResponse(object):
 			'channels': list(self.channel_items.keys()),
 			'user': user_id
 		}
-		params['es-meta'] = six.ensure_text(jwt.encode(es_meta,
-				settings.SECRET_KEY.encode('utf-8')))
-		next_uri = http_request.path + '?' + params.urlencode()
+		params['es-meta'] = six.ensure_text(jwt.encode(es_meta,settings.SECRET_KEY.encode('utf-8')))
+
+		next_uri = build_next_uri(http_request.path, params.urlencode())
 
 		instruct = http_request.grip.start_instruct()
 

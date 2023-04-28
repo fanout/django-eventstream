@@ -1,4 +1,5 @@
 import json
+import re
 import threading
 import importlib
 import six
@@ -167,3 +168,11 @@ def augment_cors_headers(headers):
 
 	if allow_headers:
 		headers['Access-Control-Allow-Headers'] = allow_headers
+
+
+def build_next_uri(path, params):
+	path_prepend = getattr(settings, 'EVENTSTREAM_PATH_PREPEND', None)
+	if path_prepend:
+		path = path_prepend + path
+
+	return path + '?' + params
