@@ -4,4 +4,4 @@ daphne==3.0.2
 dj-database-url==0.5.0
 Django==3.2.14
 django-dotenv==1.4.2
-django-grip==3.3.0
+django-grip==3.4.0
