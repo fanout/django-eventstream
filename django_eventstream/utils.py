@@ -55,7 +55,13 @@ def sse_encode_event(event_type, data, event_id=None, escape=False, json_encode=
 	out = 'event: %s\n' % event_type
 	if event_id:
 		out += 'id: %s\n' % event_id
-	out += 'data: %s\n\n' % data
+	if '\n' in data:
+		# Handle multi-line data
+		for line in data.split('\n'):
+			out += 'data: %s\n' % line
+		out += '\n' # At the end pop an additional new line to cap off the data.
+	else:
+		out += 'data: %s\n\n' % data
 	return out
 
 def sse_encode_error(condition, text, extra=None):
