@@ -10,8 +10,6 @@ is_python3 = sys.version_info >= (3,)
 # minutes before purging an event from the database
 EVENT_TIMEOUT = 60 * 24
 
-# attempt to trim this many events per pass
-EVENT_TRIM_BATCH = 50
 
 class EventDoesNotExist(Exception):
 	def __init__(self, message, current_id):
@@ -116,15 +114,4 @@ class DjangoModelStorage(StorageBase):
 
 		now = timezone.now()
 		cutoff = now - datetime.timedelta(minutes=EVENT_TIMEOUT)
-		while True:
-			events = models.Event.objects.filter(
-				created__lt=cutoff
-			)[:EVENT_TRIM_BATCH]
-			if len(events) < 1:
-				break
-			for e in events:
-				try:
-					e.delete()
-				except models.Event.DoesNotExist:
-					# someone else deleted. that's fine
-					pass
+		models.Event.objects.filter(created__lt=cutoff).delete()
