@@ -10,9 +10,4 @@ from .eventstream import (
     channel_permission_changed,
 )
 
-from .utils import have_channels
-
 from . import urls
-
-if have_channels():
-    from . import routing

@@ -15,15 +15,6 @@ except ImportError:
 tlocal = threading.local()
 
 
-def have_channels():
-    try:
-        from channels.generic.http import AsyncHttpConsumer
-
-        return True
-    except ImportError:
-        return False
-
-
 # return dict of (channel, last-id)
 def parse_last_event_id(s):
     out = {}

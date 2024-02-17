@@ -26,28 +26,19 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
-from django_eventstream.utils import have_channels
-
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_eventstream",
+    "chat",
 ]
-
-if have_channels():
-    INSTALLED_APPS.append("channels")
-
-INSTALLED_APPS.extend(
-    [
-        "django_eventstream",
-        "chat",
-    ]
-)
 
 MIDDLEWARE = [
     "django_grip.GripMiddleware",

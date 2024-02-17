@@ -9,7 +9,6 @@ from .utils import (
     publish_kick,
     get_storage,
     get_channelmanager,
-    have_channels,
 )
 
 
@@ -25,6 +24,7 @@ def send_event(
     channel, event_type, data, skip_user_ids=None, async_publish=True, json_encode=True
 ):
     from .event import Event
+    from .views import get_listener_manager
 
     if json_encode:
         data = json.dumps(data, cls=DjangoJSONEncoder)
@@ -44,11 +44,8 @@ def send_event(
         pub_id = None
         pub_prev_id = None
 
-    if have_channels():
-        from .consumers import get_listener_manager
-
-        # send to local listeners
-        get_listener_manager().add_to_queues(channel, e)
+    # send to local listeners
+    get_listener_manager().add_to_queues(channel, e)
 
     # publish through grip proxy
     publish_event(
@@ -142,15 +139,14 @@ def get_current_event_id(channels):
 
 
 def channel_permission_changed(user, channel):
+    from .views import get_listener_manager
+
     channelmanager = get_channelmanager()
     if not channelmanager.can_read_channel(user, channel):
         user_id = user.id if user else "anonymous"
 
-        if have_channels():
-            from .consumers import get_listener_manager
-
-            # kick local listeners
-            get_listener_manager().kick(user_id, channel)
+        # kick local listeners
+        get_listener_manager().kick(user_id, channel)
 
         # kick users connected to grip proxy
         publish_kick(user_id, channel)
