@@ -3,8 +3,6 @@ import django_eventstream
 from . import views
 
 urlpatterns = [
-    path('', views.home),
-    path('events/', include(django_eventstream.urls), {
-        'channels': ['time']
-    }),
+    path("", views.home),
+    path("events/", include(django_eventstream.urls), {"channels": ["time"]}),
 ]

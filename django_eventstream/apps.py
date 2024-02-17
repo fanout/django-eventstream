@@ -5,4 +5,4 @@ from django.apps import AppConfig
 
 
 class DjangoEventstreamConfig(AppConfig):
-    name = 'django_eventstream'
+    name = "django_eventstream"

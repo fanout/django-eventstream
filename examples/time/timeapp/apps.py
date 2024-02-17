@@ -6,7 +6,7 @@ from django_eventstream import send_event
 
 
 class TimeappConfig(AppConfig):
-    name = 'timeapp'
+    name = "timeapp"
 
     def ready(self):
         ensure_worker_started()
@@ -34,13 +34,14 @@ def ensure_worker_started():
 def send_worker():
     while True:
         data = datetime.datetime.utcnow().isoformat()
-        send_event('time', 'message', data)
+        send_event("time", "message", data)
         time.sleep(1)
 
 
 def is_db_ready():
     from django.db import DatabaseError
     from django_eventstream.models import Event
+
     try:
         # see if db tables are present
         Event.objects.count()

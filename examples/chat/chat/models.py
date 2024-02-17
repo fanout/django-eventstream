@@ -13,8 +13,8 @@ class ChatMessage(models.Model):
 
     def to_data(self):
         out = {}
-        out['id'] = self.id
-        out['from'] = self.user
-        out['date'] = self.date
-        out['text'] = self.text
+        out["id"] = self.id
+        out["from"] = self.user
+        out["date"] = self.date
+        out["text"] = self.text
         return out

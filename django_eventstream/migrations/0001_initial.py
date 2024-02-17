@@ -9,32 +9,41 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Event',
+            name="Event",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False, verbose_name='ID')),
-                ('channel', models.CharField(db_index=True, max_length=255)),
-                ('type', models.CharField(db_index=True, max_length=255)),
-                ('data', models.TextField()),
-                ('eid', models.BigIntegerField(db_index=True, default=0)),
-                ('created', models.DateTimeField(auto_now_add=True, db_index=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("channel", models.CharField(db_index=True, max_length=255)),
+                ("type", models.CharField(db_index=True, max_length=255)),
+                ("data", models.TextField()),
+                ("eid", models.BigIntegerField(db_index=True, default=0)),
+                ("created", models.DateTimeField(auto_now_add=True, db_index=True)),
             ],
         ),
         migrations.CreateModel(
-            name='EventCounter',
+            name="EventCounter",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255, unique=True)),
-                ('value', models.BigIntegerField(default=0)),
-                ('updated', models.DateTimeField(auto_now=True, db_index=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("name", models.CharField(max_length=255, unique=True)),
+                ("value", models.BigIntegerField(default=0)),
+                ("updated", models.DateTimeField(auto_now=True, db_index=True)),
             ],
         ),
         migrations.AlterUniqueTogether(
-            name='event',
-            unique_together=set([('channel', 'eid')]),
+            name="event",
+            unique_together=set([("channel", "eid")]),
         ),
     ]

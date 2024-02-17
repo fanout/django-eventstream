@@ -1,1 +1,1 @@
-default_app_config = 'timeapp.apps.TimeappConfig'
+default_app_config = "timeapp.apps.TimeappConfig"

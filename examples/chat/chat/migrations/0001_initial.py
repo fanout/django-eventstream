@@ -12,36 +12,42 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='ChatMessage',
+            name="ChatMessage",
             fields=[
-                ('id',
-                 models.AutoField(
-                     auto_created=True,
-                     primary_key=True,
-                     serialize=False,
-                     verbose_name='ID')),
-                ('user', models.CharField(max_length=64)),
-                ('date', models.DateTimeField(auto_now=True, db_index=True)),
-                ('text', models.TextField()),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("user", models.CharField(max_length=64)),
+                ("date", models.DateTimeField(auto_now=True, db_index=True)),
+                ("text", models.TextField()),
             ],
         ),
         migrations.CreateModel(
-            name='ChatRoom',
+            name="ChatRoom",
             fields=[
-                ('id',
-                 models.AutoField(
-                     auto_created=True,
-                     primary_key=True,
-                     serialize=False,
-                     verbose_name='ID')),
-                ('eid', models.CharField(max_length=64, unique=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("eid", models.CharField(max_length=64, unique=True)),
             ],
         ),
         migrations.AddField(
-            model_name='chatmessage',
-            name='room',
+            model_name="chatmessage",
+            name="room",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE,
-                to='chat.ChatRoom'),
+                on_delete=django.db.models.deletion.CASCADE, to="chat.ChatRoom"
+            ),
         ),
     ]
