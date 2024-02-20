@@ -30,94 +30,42 @@ data: {"bar": "baz"}
 Features:
 
 * Easy to consume from browsers or native applications.
-* Highly reliable. Events can be persisted to your database, so clients can recover if they get disconnected.
-* Set per-user channel permissions.
-* Clean API contract that could be exposed to third parties if desired.
+* Reliable delivery. Events can be persisted to your database, so clients can recover if they get disconnected.
+* Per-user channel permissions.
 
 ## Requirements
 
-This library requires either:
-
-* [Django Channels 3](https://channels.readthedocs.io/en/latest/), for native asynchronous connection handling.
-
-*or*
-
-* A GRIP-compatible proxy such as [Pushpin](https://pushpin.org) or [Fastly Fanout](https://developer.fastly.com/learning/concepts/real-time-messaging/fanout/), for delegating the connection handling and keeping the Django app stateless.
-
-Note that it is possible to combine the two. If the app is set up with Channels and a connection arrives through a GRIP proxy, then the handling will be delegated.
+* Django 5.0
 
 ## Setup
 
-We recommend setting up your project with Channels as this will give you the most flexibility, including being able to run standalone or with `runserver`.
-
-Otherwise, see [Setup without Channels](#setup-without-channels).
-
-### Setup with Channels
-
-First, install this module and the channels module:
+First, install this module and the daphne module:
 
 ```sh
-pip install django-eventstream channels
+pip install django-eventstream daphne
 ```
 
-Add the `channels` and `django_eventstream` apps to your `settings.py`:
+Add the `daphne` and `django_eventstream` apps to `settings.py`:
 
 ```py
 INSTALLED_APPS = [
     ...
-    'channels',
-    'django_eventstream',
+    "daphne",
+    "django_eventstream",
 ]
 ```
 
-Add the `GripMiddleware`:
+Add an endpoint in `urls.py`:
 
 ```py
-MIDDLEWARE = [
-    'django_grip.GripMiddleware',
-    ...
-]
-```
-
-The middleware is part of [django-grip](https://github.com/fanout/django-grip), which should have been pulled in automatically as a dependency of this module.
-
-Channels introduces an entirely separate routing system for handling async connections. You'll need to declare an [ASGI](https://channels.readthedocs.io/en/latest/asgi.html) application instead of (or in addition to) a WSGI application.
-
-For example, create an `asgi.py` file in your Django project dir (next to `settings.py`) with an endpoint declared:
-
-```py
-"""
-ASGI entrypoint. Configures Django and then runs the application
-defined in the ASGI_APPLICATION setting.
-"""
-
-import os
-import django
-from django.core.asgi import get_asgi_application
-from django.urls import path, re_path
-from channels.routing import ProtocolTypeRouter, URLRouter
-from channels.auth import AuthMiddlewareStack
+from django.urls import path, include
 import django_eventstream
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "server.settings")
-
-application = ProtocolTypeRouter({
-    'http': URLRouter([
-        path('events/', AuthMiddlewareStack(
-            URLRouter(django_eventstream.routing.urlpatterns)
-        ), { 'channels': ['test'] }),
-        re_path(r'', get_asgi_application()),
-    ]),
-})
+urlpatterns = [
+    ...
+    path("events/", include(django_eventstream.urls), {"channels": ["test"]}),
+]
 ```
-
-Then set `ASGI_APPLICATION` in your `settings.py` file to your project's `asgi` module:
-
-```py
-ASGI_APPLICATION = 'your_project.asgi.application'
-```
-
-For more information about setting up Channels in general, see the [Channels Documentation](http://channels.readthedocs.io/en/latest/tutorial/part_1.html#integrate-the-channels-library).
 
 That's it! If you run `python manage.py runserver`, clients will be able to connect to the `/events/` endpoint and get a stream.
 
@@ -126,12 +74,14 @@ To send data to clients, call `send_event`:
 ```py
 from django_eventstream import send_event
 
-send_event('test', 'message', {'text': 'hello world'})
+send_event("test", "message", {"text": "hello world"})
 ```
 
 The first argument is the channel to send on, the second is the event type, and the third is the event data. The data will be JSON-encoded using `DjangoJSONEncoder`.
 
-### Deploying with Channels
+Note: in a basic setup, `send_event` must be called from within the server process (e.g. called from a view). It won't work if called from a separate process, such as from the shell or a management command.
+
+### Deploying
 
 After following the instructions in the previous section, you'll be able to develop and run locally using `runserver`. However, you should not use `runserver` when deploying, and instead launch an ASGI server such as Daphne, e.g.:
 
@@ -139,19 +89,30 @@ After following the instructions in the previous section, you'll be able to deve
 daphne your_project.asgi:application
 ```
 
-See the [Channels Documentation](https://channels.readthedocs.io/en/latest/deploying.html) for information about deployment.
+See [How to deploy with ASGI](https://docs.djangoproject.com/en/5.0/howto/deployment/asgi/).
+
+WSGI mode can work too, but only in combination with a GRIP proxy. See [Multiple instances and scaling](#multiple-instances-and-scaling).
 
 ### Multiple instances and scaling
 
-If you need to run multiple instances of your Django app for high availability or scalability, or need to push data from management commands, then you can introduce a GRIP proxy layer such as [Pushpin](https://pushpin.org) or [Fastly Fanout](https://developer.fastly.com/learning/concepts/real-time-messaging/fanout/) into your architecture. Otherwise, events originating from an instance will only be delivered to clients connected to that instance.
+If you need to run multiple instances of your Django app for high availability or scalability, or need to send events from management commands, then you can introduce a GRIP proxy such as [Pushpin](https://pushpin.org) or [Fastly Fanout](https://developer.fastly.com/learning/concepts/real-time-messaging/fanout/) into your architecture. Otherwise, events originating from an instance will only be delivered to clients connected to that instance.
 
 For example, to use Pushpin with your app, you need to do three things:
 
-1. In your `settings.py`, set `GRIP_URL` to reference Pushpin's private control port:
+1. In your `settings.py`, add the `GripMiddleware` and set `GRIP_URL` to reference Pushpin's private control port:
+
+```py
+MIDDLEWARE = [
+    "django_grip.GripMiddleware",
+    ...
+]
+```
 
 ```py
 GRIP_URL = 'http://localhost:5561'
 ```
+
+The middleware is part of [django-grip](https://github.com/fanout/django-grip), which should have been pulled in automatically as a dependency of this module.
 
 2. Configure Pushpin to route requests to your app, by adding something like this to Pushpin's `routes` file (usually `/etc/pushpin/routes`):
 
@@ -170,69 +131,6 @@ location /api/ {
 ```
 
 The `location` block above will pass all requests coming on `/api/` to Pushpin.
-
-### Setup without Channels
-
-It is possible to use this library with a GRIP proxy only, without setting up Channels.
-
-First, install this module:
-
-```sh
-pip install django-eventstream
-```
-
-A few changes need to be made to `settings.py`.
-
-Add the `django_eventstream` app:
-
-```py
-INSTALLED_APPS = [
-    ...
-    'django_eventstream',
-]
-```
-
-Add the `GripMiddleware`:
-
-```py
-MIDDLEWARE = [
-    'django_grip.GripMiddleware',
-    ...
-]
-```
-
-The middleware is part of [django-grip](https://github.com/fanout/django-grip), which should have been pulled in automatically as a dependency of this module.
-
-Set `GRIP_URL` with your Pushpin settings:
-
-```py
-# pushpin
-GRIP_URL = 'http://localhost:5561'
-```
-
-Add an endpoint in `urls.py`:
-
-```py
-from django.urls import path, include
-import django_eventstream
-
-urlpatterns = [
-    ...
-    path('events/', include(django_eventstream.urls), {'channels': ['test']}),
-]
-```
-
-That's it! Clients can now connect to the `/events/` endpoint through the proxy and get a stream.
-
-To send data to clients, call `send_event`:
-
-```py
-from django_eventstream import send_event
-
-send_event('test', 'message', {'text': 'hello world'})
-```
-
-The first argument is the channel to send on, the second is the event type, and the third is the event data. The data will be JSON-encoded using `DjangoJSONEncoder`.
 
 ## Event storage
 
