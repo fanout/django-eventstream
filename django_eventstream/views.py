@@ -14,13 +14,16 @@ MAX_PENDING = 10
 
 class Listener(object):
     def __init__(self):
-        self.loop = asyncio.get_event_loop()
+        self.loop = None
         self.aevent = asyncio.Event()
         self.user_id = ""
         self.channels = set()
         self.channel_items = {}
         self.overflow = False
         self.error = ""
+
+    def assign_loop(self):
+        self.loop = asyncio.get_event_loop()
 
     def wake_threadsafe(self):
         self.loop.call_soon_threadsafe(self.aevent.set)
@@ -101,17 +104,15 @@ def get_listener_manager():
     return listener_manager
 
 
-async def stream(event_request):
+async def stream(event_request, listener):
     from .eventstream import get_events, EventPermissionError
     from .utils import sse_encode_event, sse_encode_error, make_id
 
     get_events = sync_to_async(get_events)
 
-    lm = get_listener_manager()
+    listener.assign_loop()
 
-    listener = Listener()
-    listener.user_id = event_request.user.pk if event_request.user else "anonymous"
-    listener.channels = event_request.channels
+    lm = get_listener_manager()
     lm.add_listener(listener)
 
     try:
@@ -276,8 +277,12 @@ def events(request, **kwargs):
     # if we got here then the request was not a grip request, and there
     #   were no errors, so we can begin a local stream response
 
+    listener = Listener()
+    listener.user_id = event_request.user.pk if event_request.user else "anonymous"
+    listener.channels = event_request.channels
+
     response = StreamingHttpResponse(
-        stream(event_request), content_type="text/event-stream"
+        stream(event_request, listener), content_type="text/event-stream"
     )
     add_default_headers(response)
 

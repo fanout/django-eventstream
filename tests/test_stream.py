@@ -2,14 +2,14 @@
 from __future__ import unicode_literals
 import asyncio
 
+from asgiref.sync import sync_to_async
 from django.test import TestCase
-from django_eventstream.consumers import EventsConsumer, Listener
+from django_eventstream.views import Listener, stream
 from django_eventstream.eventrequest import EventRequest
 from unittest import IsolatedAsyncioTestCase
 
 from django_eventstream.storage import DjangoModelStorage
 from unittest.mock import patch
-from channels.db import database_sync_to_async
 
 
 EVENTS_LIMIT = 100
@@ -29,16 +29,23 @@ class DjangoStreamTest(IsolatedAsyncioTestCase):
     async def test_stream_with_last_event_id_does_not_loop_forever(
         self, mock_get_storage
     ):
-        events_consumer, request = await self.__initialise_test(mock_get_storage)
+        request, listener = await self.__initialise_test(mock_get_storage)
 
         with patch.object(
             self.storage, "get_events", wraps=self.storage.get_events
         ) as wrapped_storage:
 
-            promise = asyncio.create_task(events_consumer.stream(request))
+            promise = asyncio.create_task(
+                self.__collect_response(stream(request, listener))
+            )
             await asyncio.sleep(2)
-            events_consumer.is_streaming = False
-            await promise
+            promise.cancel()
+
+            try:
+                await promise
+                raise ValueError("stream completed unexpectedly")
+            except asyncio.CancelledError:
+                pass
 
             # print(self.storage.get_events.call_args_list)
             self.__assert_all_events_are_retrieved_only_once()
@@ -54,20 +61,18 @@ class DjangoStreamTest(IsolatedAsyncioTestCase):
     async def __initialise_test(self, mock_get_storage):
         mock_get_storage.return_value = self.storage
 
-        events_consumer = self.__create_events_consumer()
-        request = self.__create_event_request()
-        await self.__populate_db_with_events()
-        return events_consumer, request
-
-    def __create_events_consumer(self):
         mock_listener = Listener()
         mock_listener.aevent.wait = mock_wait
 
-        events_consumer = EventsConsumer()
-        events_consumer.listener = mock_listener
-        events_consumer.is_streaming = True
-        events_consumer.base_send = mock_send
-        return events_consumer
+        request = self.__create_event_request()
+        await self.__populate_db_with_events()
+        return request, mock_listener
+
+    async def __collect_response(self, stream_iter):
+        response = ""
+        async for chunk in stream_iter:
+            response += chunk
+        return response
 
     def __create_event_request(self):
         request = EventRequest()
@@ -77,7 +82,7 @@ class DjangoStreamTest(IsolatedAsyncioTestCase):
         request.channel_last_ids = {CHANNEL_NAME: INITIAL_EVENT}
         return request
 
-    @database_sync_to_async
+    @sync_to_async
     def __populate_db_with_events(self):
         for i in range(EVENTS_LIMIT + EVENTS_OVER_LIMIT):
             self.storage.append_event(CHANNEL_NAME, "message", "dummy")
