@@ -23,7 +23,7 @@ class EventResponse(object):
         self.is_recover = False
         self.user = None
 
-    def to_http_response(self, http_request):
+    def to_grip_response(self, http_request):
         last_ids = copy.deepcopy(self.channel_last_ids)
         event_id = make_id(last_ids)
 

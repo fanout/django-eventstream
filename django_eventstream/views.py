@@ -262,10 +262,10 @@ def events(request, **kwargs):
         response = sse_error_response("forbidden", str(e), {"channels": e.channels})
 
     # for grip requests, prepare immediate response
-    if not response and request.grip.proxied:
+    if not response and hasattr(request, "grip") and request.grip.proxied:
         try:
             event_response = get_events(event_request)
-            response = event_response.to_http_response(request)
+            response = event_response.to_grip_response(request)
         except EventPermissionError as e:
             response = sse_error_response("forbidden", str(e), {"channels": e.channels})
 
