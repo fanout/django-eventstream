@@ -79,7 +79,7 @@ def sse_error_response(condition, text, extra=None):
 
 
 def publish_event(
-        channel, event_type, data, pub_id, pub_prev_id, skip_user_ids=None, **publish_kwargs
+    channel, event_type, data, pub_id, pub_prev_id, skip_user_ids=None, **publish_kwargs
 ):
     from django_grip import publish
 
@@ -102,7 +102,7 @@ def publish_event(
         id=pub_id,
         prev_id=pub_prev_id,
         meta=meta,
-        **publish_kwargs
+        **publish_kwargs,
     )
 
 
@@ -128,7 +128,7 @@ def load_class(name):
     if at == -1:
         raise ValueError("class name contains no '.'")
     module_name = name[0:at]
-    class_name = name[at + 1:]
+    class_name = name[at + 1 :]
     return getattr(importlib.import_module(module_name), class_name)()
 
 
@@ -205,7 +205,9 @@ def augment_cors_headers(headers, request):
         if isinstance(cors_origin, str):
             headers["Access-Control-Allow-Origin"] = cors_origin
         elif isinstance(cors_origin, list):
-            headers["Access-Control-Allow-Origin"] = find_related_origin(request=request, cors_origins=cors_origin)
+            headers["Access-Control-Allow-Origin"] = find_related_origin(
+                request=request, cors_origins=cors_origin
+            )
         else:
             raise TypeError("settings.EVENTSTREAM_ALLOW_ORIGIN should be str or list")
 
