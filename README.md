@@ -233,14 +233,16 @@ If even more advanced channel mapping is needed, implement a channel manager and
 
 ## Cross-Origin Resource Sharing (CORS) Headers
 
-There are settings available to set response headers `Access-Control-Allow-Origin`, `Access-Control-Allow-Credentials`, and `Access-Control-Allow-Headers`, which are `EVENTSTREAM_ALLOW_ORIGIN`, `EVENTSTREAM_ALLOW_CREDENTIALS`, and `EVENTSTREAM_ALLOW_HEADERS`, respectively.
+There are settings available to set response headers `Access-Control-Allow-Origin`, `Access-Control-Allow-Credentials`, and `Access-Control-Allow-Headers`, which are `EVENTSTREAM_ALLOW_ORIGINS`, `EVENTSTREAM_ALLOW_CREDENTIALS`, and `EVENTSTREAM_ALLOW_HEADERS`, respectively.
 
 Examples:
 
 ```py
-EVENTSTREAM_ALLOW_ORIGIN = 'your-website.com'
+EVENTSTREAM_ALLOW_ORIGINS = ['http://example.com', 'https://example.com']
 EVENTSTREAM_ALLOW_CREDENTIALS = True
 EVENTSTREAM_ALLOW_HEADERS = 'Authorization'
 ```
 
-Note that `EVENTSTREAM_ALLOW_ORIGIN` and `EVENTSTREAM_ALLOW_HEADERS` only take a single string value and do not process a list.
+Note that `EVENTSTREAM_ALLOW_HEADERS` only takes a single string value and does not process a list.
+
+If more advanced CORS capabilities are needed, see [django-cors-headers](https://github.com/adamchainz/django-cors-headers).
