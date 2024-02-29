@@ -9,8 +9,9 @@ from gripcontrol import HttpStreamFormat
 
 try:
     from urllib import quote
+    from urlparse import urlparse
 except ImportError:
-    from urllib.parse import quote
+    from urllib.parse import quote, urlparse
 
 tlocal = threading.local()
 
@@ -78,7 +79,7 @@ def sse_error_response(condition, text, extra=None):
 
 
 def publish_event(
-    channel, event_type, data, pub_id, pub_prev_id, skip_user_ids=None, **publish_kwargs
+        channel, event_type, data, pub_id, pub_prev_id, skip_user_ids=None, **publish_kwargs
 ):
     from django_grip import publish
 
@@ -127,7 +128,7 @@ def load_class(name):
     if at == -1:
         raise ValueError("class name contains no '.'")
     module_name = name[0:at]
-    class_name = name[at + 1 :]
+    class_name = name[at + 1:]
     return getattr(importlib.import_module(module_name), class_name)()
 
 
@@ -162,17 +163,51 @@ def get_channelmanager():
     )
 
 
-def add_default_headers(headers):
+def add_default_headers(headers, request):
     headers["Cache-Control"] = "no-cache"
     headers["X-Accel-Buffering"] = "no"
-    augment_cors_headers(headers)
+    augment_cors_headers(headers, request)
 
 
-def augment_cors_headers(headers):
-    cors_origin = getattr(settings, "EVENTSTREAM_ALLOW_ORIGIN", "")
+def find_related_origin(request, cors_origins: list):
+    """
+    Find a related origin from a list of CORS (Cross-Origin Resource Sharing) origins
+    based on the request's absolute URI.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        cors_origins (list): A list of CORS origins.
+
+    Returns:
+        str: The related origin if found, otherwise an empty string.
+
+    Example:
+        Consider a request with the absolute URI 'https://example.com/some-path/' and
+        CORS origins ['http://example.com', 'https://example.com', 'https://sub.example.com'].
+        Calling find_related_origin(request, cors_origins) will return 'https://example.com'
+        as it matches the scheme and netloc of the request's URI.
+
+    """
+    origins = [urlparse(o) for o in cors_origins]
+    url = urlparse(request.build_absolute_uri())
+    for origin in origins:
+        if origin.scheme == url.scheme and origin.netloc == url.netloc:
+            return f"{origin.scheme}://{origin.netloc}"
+    return ""
+
+
+def augment_cors_headers(headers, request):
+    cors_origin = getattr(settings, "EVENTSTREAM_ALLOW_ORIGIN", None)
+    if not cors_origin:
+        cors_origin = getattr(settings, "EVENTSTREAM_ALLOW_ORIGINS", "")
 
     if cors_origin:
-        headers["Access-Control-Allow-Origin"] = cors_origin
+        if isinstance(cors_origin, str):
+            headers["Access-Control-Allow-Origin"] = cors_origin
+        elif isinstance(cors_origin, list):
+            headers["Access-Control-Allow-Origin"] = find_related_origin(request=request, cors_origins=cors_origin)
+        else:
+            raise TypeError("settings.EVENTSTREAM_ALLOW_ORIGIN should be str or list")
 
     allow_credentials = getattr(settings, "EVENTSTREAM_ALLOW_CREDENTIALS", False)
 

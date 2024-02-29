@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import asyncio
 import copy
 import threading
-import six
 from asgiref.sync import sync_to_async
 from django.http import HttpResponseBadRequest, StreamingHttpResponse
 from .utils import add_default_headers
@@ -62,18 +61,18 @@ class ListenerManager(object):
         try:
             wake = []
             listeners = self.listeners_by_channel.get(channel, set())
-            for l in listeners:
-                items = l.channel_items.get(channel)
+            for listener in listeners:
+                items = listener.channel_items.get(channel)
                 if items is None:
                     items = []
-                    l.channel_items[channel] = items
+                    listener.channel_items[channel] = items
                 if len(items) < MAX_PENDING:
                     items.append(event)
-                    wake.append(l)
+                    wake.append(listener)
                 else:
-                    l.overflow = True
-            for l in wake:
-                l.wake_threadsafe()
+                    listener.overflow = True
+            for listener in wake:
+                listener.wake_threadsafe()
         finally:
             self.lock.release()
 
@@ -82,17 +81,17 @@ class ListenerManager(object):
         try:
             wake = []
             listeners = self.listeners_by_channel.get(channel, set())
-            for l in listeners:
-                if l.user_id == user_id:
+            for listener in listeners:
+                if listener.user_id == user_id:
                     msg = "Permission denied to channels: %s" % channel
-                    l.error = {
+                    listener.error = {
                         "condition": "forbidden",
                         "text": msg,
                         "extra": {"channels": [channel]},
                     }
-                    wake.append(l)
-            for l in wake:
-                l.wake_threadsafe()
+                    wake.append(listener)
+            for listener in wake:
+                listener.wake_threadsafe()
         finally:
             self.lock.release()
 
@@ -271,7 +270,7 @@ def events(request, **kwargs):
 
     # if this was a grip request or we encountered an error, respond now
     if response:
-        add_default_headers(response)
+        add_default_headers(response, request=request)
         return response
 
     # if we got here then the request was not a grip request, and there
@@ -284,6 +283,6 @@ def events(request, **kwargs):
     response = StreamingHttpResponse(
         stream(event_request, listener), content_type="text/event-stream"
     )
-    add_default_headers(response)
+    add_default_headers(response, request=request)
 
     return response
