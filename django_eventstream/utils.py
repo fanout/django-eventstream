@@ -205,9 +205,9 @@ def augment_cors_headers(headers, request):
         if isinstance(cors_origin, str):
             headers["Access-Control-Allow-Origin"] = cors_origin
         elif isinstance(cors_origin, list):
-            headers["Access-Control-Allow-Origin"] = find_related_origin(
-                request=request, cors_origins=cors_origin
-            )
+            origin = find_related_origin(request=request, cors_origins=cors_origin)
+            if origin:
+                headers["Access-Control-Allow-Origin"] = origin
         else:
             raise TypeError("settings.EVENTSTREAM_ALLOW_ORIGIN should be str or list")
 
