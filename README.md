@@ -96,7 +96,32 @@ class EventsViewSet(ViewSet):
 ```
 Note: You could get the channels that you want to use from the request or from anything as you want.
 
-And resgister the ViewSet in the router:
+If your client call the API using `Accept: text/event-stream`, you will need to add a renderer to the ViewSet:
+
+```py
+class TextEventStreamRenderer(BaseRenderer):
+    # We define the media to be text/event-stream
+    media_type = 'text/event-stream'
+    # We also define the Access-Control-Allow-Origin header to ensure that is used
+    Access_Control_Allow_Origin = EVENTSTREAM_ALLOW_ORIGIN
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        return data
+
+class EventsViewSet(ViewSet):
+    renderer_classes = [TextEventStreamRenderer]
+
+    def list(self, request, *args, **kwargs):
+        channels = ['parser', 'scanner']  
+        kwargs['channels'] = channels
+        django_request = request._request if hasattr(request, '_request') else request
+
+        return events(django_request, **kwargs)
+```
+
+With this renderer, you can call the API using `Accept: text/event-stream` and the renderer will handle the Content-Type.
+
+And now resgister the ViewSet in the router:
 
 ```py
 from rest_framework.routers import DefaultRouter
