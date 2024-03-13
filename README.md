@@ -67,6 +67,45 @@ urlpatterns = [
 ]
 ```
 
+Or if you want to use a router you will need a ViewSet like this:
+
+```py
+from rest_framework.viewsets import ViewSet
+from django_eventstream.views import events
+
+class EventsViewSet(ViewSet):
+    """
+    A ViewSet to encapsulate the function-based view 'events'.
+    """
+
+    def list(self, request, *args, **kwargs):
+        """
+        Redirects requests to the 'events' function, passing 'channels' as kwargs.
+        """
+        # Define 'channels' statically for this example
+        channels = ['chat1', 'admin']
+
+        # Add 'channels' to kwargs
+        kwargs['channels'] = channels
+
+        # Convert the DRF `request` object to Django's `HttpRequest` object if necessary
+        django_request = request._request if hasattr(request, '_request') else request
+        
+        # Directly call the 'events' function with the updated kwargs
+        return events(django_request, **kwargs)
+```
+Note: You could get the channels that you want to use from the request or from anything as you want.
+
+And resgister the ViewSet in the router:
+
+```py
+from rest_framework.routers import DefaultRouter
+from .views import EventsViewSet
+
+router = DefaultRouter()
+router.register(r'events', EventsViewSet, basename='events')
+```
+
 That's it! If you run `python manage.py runserver`, clients will be able to connect to the `/events/` endpoint and get a stream.
 
 To send data to clients, call `send_event`:
@@ -79,7 +118,7 @@ send_event("test", "message", {"text": "hello world"})
 
 The first argument is the channel to send on, the second is the event type, and the third is the event data. The data will be JSON-encoded using `DjangoJSONEncoder`.
 
-Note: in a basic setup, `send_event` must be called from within the server process (e.g. called from a view). It won't work if called from a separate process, such as from the shell or a management command.
+Note: in a basic setup, `send_event` must be called from within the server process (e.g. called from a view). It won't work if called from a separate process, such as from the shell or a management command, you could use Redis or another message queue to communicate between processes.
 
 ### Deploying
 
