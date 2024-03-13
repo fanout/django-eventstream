@@ -67,7 +67,7 @@ urlpatterns = [
 ]
 ```
 
-Or if you want to use a router you will need a ViewSet like this:
+Or if you want to use a Django-restframework router you will need a ViewSet like this:
 
 ```py
 from rest_framework.viewsets import ViewSet
