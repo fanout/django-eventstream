@@ -201,11 +201,15 @@ def find_related_origin(request, cors_origins: list):
                 return f"{origin.scheme}://{origin.netloc}"
     return ""
 
-
-def augment_cors_headers(headers, request):
+def get_cors_from_settings():
     cors_origin = getattr(settings, "EVENTSTREAM_ALLOW_ORIGIN", None)
     if not cors_origin:
         cors_origin = getattr(settings, "EVENTSTREAM_ALLOW_ORIGINS", "")
+    return cors_origin
+
+
+def augment_cors_headers(headers, request):
+    cors_origin = get_cors_from_settings()
 
     if cors_origin:
         if isinstance(cors_origin, str):
