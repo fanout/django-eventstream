@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Join</title>
+    <meta name="description" content="Chat">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var hostname = window.location.hostname;
+            var port8000 = ':8000'; 
+            var port9000 = ':9000'; 
+    
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = `http://${hostname}${port8000}/static/rest_framework/css/bootstrap.min.css`;
+            document.head.appendChild(link);
+    
+            var script = document.createElement('script');
+            script.src = `http://${hostname}${port9000}/static/js/jquery-3.2.1.min.js`;
+            script.onload = function() {
+                $(function () {
+                    var baseUrl = `http://${window.location.hostname}:8000`;
+  
+                    $.get(`${baseUrl}/rooms/`, function(data) {
+                        if (data.length === 0) {
+                            $.post(`${baseUrl}/rooms/`, {eid: 'general'}, function(data) {
+                                $('#room-select').append(`<option value="${data.eid}">${data.eid}</option>`);
+                            });
+                        }
+                        data.forEach(function(room) {
+                            $('#room-select').append(`<option value="${room.eid}">${room.eid}</option>`);
+                        });
+                    });
+  
+                    $('#join-button').on('click', function () {
+                        var user = $('#nick-input').val();
+                        var roomID = $('#room-select').val();
+                        if(user && roomID) {
+                            sessionStorage.setItem('user', user);
+                            sessionStorage.setItem('roomID', roomID);
+                            window.location = '/chat.html';
+                        }
+                    });
+  
+                    $('#nick-input').focus();
+                });
+            };
+            document.head.appendChild(script);
+        });
+    </script>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-xs-12 col-sm-6 col-md-4 col-sm-offset-3 col-md-offset-4">
+            <h2 class="text-center">Join Chat</h2>
+            <form id="join-form" class="form-horizontal">
+                <div class="form-group">
+                    <label for="nick-input" class="control-label">Nickname</label>
+                    <input type="text" class="form-control" id="nick-input" placeholder="Nickname">
+                </div>
+                <div class="form-group">
+                    <label for="room-select" class="control-label">Select a Room</label>
+                    <select id="room-select" class="form-control">
+                        <option value="">Select a room</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="button" id="join-button" class="btn btn-primary btn-block">Join</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+  
+</body>
+</html>
