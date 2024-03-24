@@ -33,12 +33,25 @@ Features:
 * Reliable delivery. Events can be persisted to your database, so clients can recover if they get disconnected.
 * Per-user channel permissions.
 
-## Requirements
+## Dependencies
 
-* Django 5.0
+- Django `>=5`
+- PyJWT `>=1.5, <3`
+- gripcontrol `>=4.0, <5`
+- django_grip `>=3.0, <4`
+- six `>=1.10, <2`
+
+### Optional Dependencies
+
+If your using the Django Rest Framework version of the module.
+
+- Django Rest Framework `==3.15` (for using the `ViewSet` and `router.register`).
+
+Those dependecies will be install automatically when you install this package.
 
 ## Setup
 
+### Without Django Rest Framework
 First, install this module and the daphne module:
 
 ```sh
@@ -67,83 +80,62 @@ urlpatterns = [
 ]
 ```
 
-Or if you want to use a Django-restframework router you will need a ViewSet like this:
-
-```py
-from rest_framework.viewsets import ViewSet
-from django_eventstream.views import events
-
-class EventsViewSet(ViewSet):
-    """
-    A ViewSet to encapsulate the function-based view 'events'.
-    """
-
-    def list(self, request, *args, **kwargs):
-        """
-        Redirects requests to the 'events' function, passing 'channels' as kwargs.
-        """
-        # Define 'channels' statically for this example
-        channels = ['chat1', 'admin']
-
-        # Add 'channels' to kwargs
-        kwargs['channels'] = channels
-
-        # Convert the DRF `request` object to Django's `HttpRequest` object if necessary
-        django_request = request._request if hasattr(request, '_request') else request
-        
-        # Directly call the 'events' function with the updated kwargs
-        return events(django_request, **kwargs)
-```
-Note: You could get the channels that you want to use from the request or from anything as you want.
-
-If your client call the API using `Accept: text/event-stream`, you will need to add a renderer to the ViewSet:
-
-```py
-class TextEventStreamRenderer(BaseRenderer):
-    # We define the media to be text/event-stream
-    media_type = 'text/event-stream'
-    # We also define the Access-Control-Allow-Origin header to ensure that is used
-    Access_Control_Allow_Origin = EVENTSTREAM_ALLOW_ORIGIN
-
-    def render(self, data, accepted_media_type=None, renderer_context=None):
-        return data
-
-class EventsViewSet(ViewSet):
-    renderer_classes = [TextEventStreamRenderer]
-
-    def list(self, request, *args, **kwargs):
-        channels = ['parser', 'scanner']  
-        kwargs['channels'] = channels
-        django_request = request._request if hasattr(request, '_request') else request
-
-        return events(django_request, **kwargs)
-```
-
-With this renderer, you can call the API using `Accept: text/event-stream` and the renderer will handle the Content-Type.
-
-And now resgister the ViewSet in the router:
-
-```py
-from rest_framework.routers import DefaultRouter
-from .views import EventsViewSet
-
-router = DefaultRouter()
-router.register(r'events', EventsViewSet, basename='events')
-```
-
 That's it! If you run `python manage.py runserver`, clients will be able to connect to the `/events/` endpoint and get a stream.
 
+### With Django Rest Framework
+
+First, install this module with REST dependencies and the daphne module:
+
+```sh
+pip install django-eventstream[DRF] daphne
+```
+*Note: The `[DRF]` is a optional dependency that will install the Django Rest Framework module.*
+
+Add the `daphne` and `django_eventstream` apps to `settings.py`:
+
+```py
+INSTALLED_APPS = [
+    ...
+    "daphne",
+    "django_eventstream",
+]
+```
+
+Add an endpoint in `urls.py`:
+
+```py
+from django.urls import path, include
+from django_eventstream.views import EventsViewSet, configure_events_view_set
+
+router = DefaultRouter()
+
+# In theses examples, we are using the `configure_events_view_set` function to create a view set with the channels and messages_types that we want to use.
+router.register('events1', configure_events_view_set(channels=["channel1", "channel2",...], messages_types=["message","info",...]), basename='events1') 
+# Or you can create a view set and directly pass it to the router. You will be able to set the channels by URL or by query parameters. For messages_types you can set it by query parameters or use the default value "message".
+router.register('events2', EventsViewSet, basename='events2')
+
+urlpatterns = [
+    ...
+    path("", include(router.urls)), # Here we register the router urls
+]
+```
+ *Note: These configurations are only applicable when using the Django Rest Framework version of the module (i.e., when the Django Rest Framework is installed).*
+
+### Sending events
 To send data to clients, call `send_event`:
 
 ```py
 from django_eventstream import send_event
 
+#send_event(<channel>, <event_type>, <event_data>)
 send_event("test", "message", {"text": "hello world"})
 ```
 
 The first argument is the channel to send on, the second is the event type, and the third is the event data. The data will be JSON-encoded using `DjangoJSONEncoder`.
 
-Note: in a basic setup, `send_event` must be called from within the server process (e.g. called from a view). It won't work if called from a separate process, such as from the shell or a management command, you could use Redis or another message queue to communicate between processes.
+*Note: In a basic setup, `send_event` must be called from within the server process (e.g. called from a view). It won't work if called from a separate process, such as from the shell or a management command, you could use Redis or another message queue to communicate between processes and after send your event.*
+
+*Be aware tha if you send message a message type error (or any type that used for the SSE protocol, like `open`, `error`, `close`...), the message maybe interpreted as a error message by the client.*
 
 ### Deploying
 
@@ -221,8 +213,8 @@ To enable storage selectively by channel, implement a channel manager and overri
 Include client libraries on the frontend:
 
 ```html
-<script src="{% static 'django_eventstream/eventsource.min.js' %}"></script>
-<script src="{% static 'django_eventstream/reconnecting-eventsource.js' %}"></script>
+<script src="{% static 'django_eventstream/js/eventsource.min.js' %}"></script>
+<script src="{% static 'django_eventstream/js/reconnecting-eventsource.js' %}"></script>
 ```
 
 Listen for data:
