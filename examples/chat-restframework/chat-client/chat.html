@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Chat</title>
+    <meta name="description" content="Simple Chat Application">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var hostname = window.location.hostname;
+            var port8000 = ':8000';
+            var port9000 = ':9000'; 
+    
+            var bootstrapCSS = document.createElement('link');
+            bootstrapCSS.rel = 'stylesheet';
+            bootstrapCSS.href = `http://${hostname}${port8000}/static/rest_framework/css/bootstrap.min.css`;
+            document.head.appendChild(bootstrapCSS);
+    
+            var jQueryScript = document.createElement('script');
+            jQueryScript.src = `http://${hostname}${port9000}/static/js/jquery-3.2.1.min.js`;
+            jQueryScript.onload = function() {
+                executeJQueryDependentCode();
+            };
+            document.head.appendChild(jQueryScript);
+    
+            var scripts = [
+                '/static/django_eventstream/js/json2.js',
+                '/static/django_eventstream/js/eventsource.min.js',
+                '/static/django_eventstream/js/reconnecting-eventsource.js'
+            ];
+    
+            scripts.forEach(function(path) {
+                var script = document.createElement('script');
+                script.src = `http://${hostname}${port8000}${path}`;
+                document.head.appendChild(script);
+            });
+        });
+    
+        function executeJQueryDependentCode() {
+            $(function () {
+                var user = sessionStorage.getItem('user');
+                var roomID = sessionStorage.getItem('roomID');
+        
+                var baseUrl = `http://${window.location.hostname}:8000`;
+        
+                if (user == null || roomID == null) {
+                    window.location.href = `http://${window.location.hostname}:9000/`; 
+                }
+        
+                function loadOldMessages() {
+                    $.ajax({
+                        type: "GET",
+                        url: `${baseUrl}/rooms/${roomID}/messages/`,
+                        success: function(data) {
+                            data.forEach(function(message) {
+                                addMessage(`<strong>${message.user}</strong>: ${message.text}`);
+                            });
+                        },
+                        error: function() {
+                            alert('Erreur lors de la récupération des messages.');
+                        }
+                    });
+                }
+        
+                loadOldMessages();
+                
+                $('#user-label').text(user || 'Anonyme');
+                $('#room-label').text('#' + (roomID || 'defaultRoom'));
+        
+                var es = new ReconnectingEventSource(`${baseUrl}/rooms/${encodeURIComponent(roomID)}/events/`);
+                
+                es.onmessage = function(event) {
+                    var data = JSON.parse(event.data);
+                    var messageContent = `<div><strong>${data.from}</strong>: ${data.text}</div>`;
+                    $('#chat-log').append(messageContent);
+                };
+        
+                es.onerror = function() {
+                    console.log('Erreur de connexion au stream des événements.');
+                };
+        
+                $('#send-form').submit(function(e) {
+                    e.preventDefault();
+                    var messageText = $('#chat-input').val();
+                    if (messageText.length > 0) {
+                        $.ajax({
+                            type: "POST",
+                            url: `${baseUrl}/rooms/${roomID}/messages/`,
+                            data: JSON.stringify({ user: user, text: messageText, room: roomID }),
+                            contentType: "application/json",
+                            success: function() {
+                                $('#chat-input').val('');
+                            },
+                            error: function() {
+                                alert('Erreur lors de l\'envoi du message.');
+                            }
+                        });
+                    }
+                });
+        
+                function addMessage(message) {
+                    var log = $('#chat-log');
+                    log.append(`<div>${message}</div>`);
+                    log.scrollTop(log.prop('scrollHeight'));
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header class="navbar navbar-default">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <span id="user-label" class="navbar-brand"></span>
+                </div>
+                <p class="navbar-text" id="room-label"></p>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="https://github.com/fanout/django-eventstream/tree/master/examples/chat" id="code-link">Code</a></li>
+                </ul>
+            </div>
+        </header>
+    
+        <div id="chat-elements" style="margin-bottom: 20px;">
+            <div id="chat-log" class="well" style="max-height: 500px; overflow-y: scroll;">
+                <!-- Les messages seront ajoutés ici -->
+            </div>
+        </div>
+    
+        <div id="chat-input-area">
+            <form id="send-form" class="form-inline">
+                <div class="form-group">
+                    <input type="text" id="chat-input" autocomplete="off" placeholder="Say something..." class="form-control" style="width: 75%;">
+                </div>
+                <button type="submit" id="chat-send-button" class="btn btn-primary">Send</button>
+            </form>
+        </div>
+    </div>
+    <script type="text/javascript">
+        $(function () {
+            var user = sessionStorage.getItem('user');
+            var roomID = sessionStorage.getItem('roomID');
+    
+            var baseUrl = `http://${window.location.hostname}:8000`;
+    
+            if (user == null || roomID == null) {
+                window.location.href = `http://${window.location.hostname}:9000/`;
+            }
+    
+            function loadOldMessages() {
+                $.ajax({
+                    type: "GET",
+                    url: `${baseUrl}/rooms/${roomID}/messages/`,
+                    success: function(data) {
+                        data.forEach(function(message) {
+                            addMessage(`<strong>${message.user}</strong>: ${message.text}`);
+                        });
+                    },
+                    error: function() {
+                        alert('Erreur lors de la récupération des messages.');
+                    }
+                });
+            }
+    
+            loadOldMessages();
+            
+            $('#user-label').text(user || 'Anonyme');
+            $('#room-label').text('#' + (roomID || 'defaultRoom'));
+    
+            var es = new ReconnectingEventSource(`${baseUrl}/rooms/${encodeURIComponent(roomID)}/events/`);
+            
+            es.onmessage = function(event) {
+                var data = JSON.parse(event.data);
+                var messageContent = `<div><strong>${data.from}</strong>: ${data.text}</div>`;
+                $('#chat-log').append(messageContent);
+            };
+    
+            es.onerror = function() {
+                console.log('Erreur de connexion au stream des événements.');
+            };
+    
+            $('#send-form').submit(function(e) {
+                e.preventDefault();
+                var messageText = $('#chat-input').val();
+                if (messageText.length > 0) {
+                    // Envoi du message à l'API
+                    $.ajax({
+                        type: "POST",
+                        url: `${baseUrl}/rooms/${roomID}/messages/`,
+                        data: JSON.stringify({ user: user, text: messageText, room: roomID }),
+                        contentType: "application/json",
+                        success: function() {
+                            $('#chat-input').val('');
+                        },
+                        error: function() {
+                            alert('Erreur lors de l\'envoi du message.');
+                        }
+                    });
+                }
+            });
+    
+            function addMessage(message) {
+                var log = $('#chat-log');
+                log.append(`<div>${message}</div>`);
+                log.scrollTop(log.prop('scrollHeight'));
+            }
+        });
+    </script>    
+</body>
+</html>
