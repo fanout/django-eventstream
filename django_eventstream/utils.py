@@ -193,6 +193,12 @@ def find_related_origin(request, cors_origins: list):
     for origin in origins:
         if origin.scheme == url.scheme and origin.netloc == url.netloc:
             return f"{origin.scheme}://{origin.netloc}"
+    referer = request.headers.get("Referer", None)
+    if referer is not None:
+        url = urlparse(request.headers["Referer"])
+        for origin in origins:
+            if origin.scheme == url.scheme and origin.netloc == url.netloc:
+                return f"{origin.scheme}://{origin.netloc}"
     return ""
 
 
