@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import asyncio
 import copy
-import logging
 import threading
 from asgiref.sync import sync_to_async
 from django.http import HttpResponseBadRequest, StreamingHttpResponse
@@ -240,7 +239,6 @@ async def stream(event_request, listener):
 
 
 def events(request, **kwargs):
-    logging.info(request)
     from .eventrequest import EventRequest
     from .eventstream import EventPermissionError, get_events
     from .utils import sse_error_response
