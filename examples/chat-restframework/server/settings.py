@@ -135,7 +135,6 @@ GRIP_URL = os.environ.get("GRIP_URL")
 
 EVENTSTREAM_STORAGE_CLASS = "django_eventstream.storage.DjangoModelStorage"
 
-
 CORS_ALLOW_ALL_ORIGINS = True
 
 EVENTSTREAM_ALLOW_ORIGIN = "*"

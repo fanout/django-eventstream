@@ -6,8 +6,6 @@ class BrowsableAPIEventStreamRenderer(BrowsableAPIRenderer):
     """
 
     template = 'django_eventstream/browsable-api-eventstream.html'
-    format = 'text/html'
-    media_type = 'text/html'
 
     def get_context(self, data, accepted_media_type, renderer_context):
         context = super().get_context(data, accepted_media_type, renderer_context)
