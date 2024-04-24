@@ -1,6 +1,12 @@
-class Event(object):
-    def __init__(self, channel, type, data, id=None):
-        self.channel = channel
-        self.type = type
-        self.data = data
-        self.id = id
+from dataclasses import dataclass
+from typing import Optional
+
+# Object class replaced with dataclass for type safety
+
+
+@dataclass
+class Event:
+    channel: str
+    type: str
+    data: dict
+    id: Optional[int] = None
