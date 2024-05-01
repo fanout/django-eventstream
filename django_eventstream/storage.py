@@ -115,8 +115,6 @@ class RedisStorage(StorageBase):
         """
         with self.redis.pipeline() as pipe:
             try:
-                pipe.incr("event_counter:" + channel)
-                pipe.execute()
                 event_id = pipe.incr("event_counter:" + channel)
                 event_data = json.dumps({
                     "type": event_type,
