@@ -311,9 +311,9 @@
     {% endblock %}
 
     {% if channels and not error %}
-        <script src="{% static 'django_eventstream/js/json2.js' %}"></script>
-        <script src="{% static 'django_eventstream/js/reconnecting-eventsource.js' %}"></script>
-        <script src="{% static 'django_eventstream/js/eventsource.min.js' %}"></script>
+        <script src="{% static 'django_eventstream/json2.js' %}"></script>
+        <script src="{% static 'django_eventstream/reconnecting-eventsource.js' %}"></script>
+        <script src="{% static 'django_eventstream/eventsource.min.js' %}"></script>
         <script>
           var messages_types = "{{ messages_types|safe }}";
         </script>
