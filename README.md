@@ -137,6 +137,33 @@ The first argument is the channel to send on, the second is the event type, and 
 
 *Be aware tha if you send message a message type error (or any type that used for the SSE protocol, like `open`, `error`, `close`...), the message maybe interpreted as a error message by the client.*
 
+### Disable the browsable api view sse for production [DRF]
+
+To disable the Browsable API view SSE for production, you can modify the `settings.py` of the project by adding the following lines as recommended by Django REST Framework:
+
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        # Add here the renderer classes you want to use
+    ),
+}
+```
+
+Next, manage the renderers you want to use with `DEFAULT_RENDERER_CLASSES`. In this example, you will need to use `django_eventstream.renderers.SSEEventRenderer` to enable SSE functionality. If you also want to use the Browsable API view, add `django_eventstream.renderers.BrowsableAPIEventStreamRenderer` if not do not add it :
+    
+/!\ And be careful to don't add the eventstream renderers before the JSONRenderer and BrowsableAPIRenderer (or other Renderer), otherwise the API will probably not work as expected.
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+        'django_eventstream.renderers.SSEEventRenderer',
+        'django_eventstream.renderers.BrowsableAPIEventStreamRenderer'
+         # Add other renderers as needed
+    ]
+}
+```
+
 ### Deploying
 
 After following the instructions in the previous section, you'll be able to develop and run locally using `runserver`. However, you should not use `runserver` when deploying, and instead launch an ASGI server such as Daphne, e.g.:
