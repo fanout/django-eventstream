@@ -213,8 +213,8 @@ To enable storage selectively by channel, implement a channel manager and overri
 Include client libraries on the frontend:
 
 ```html
-<script src="{% static 'django_eventstream/js/eventsource.min.js' %}"></script>
-<script src="{% static 'django_eventstream/js/reconnecting-eventsource.js' %}"></script>
+<script src="{% static 'django_eventstream/eventsource.min.js' %}"></script>
+<script src="{% static 'django_eventstream/reconnecting-eventsource.js' %}"></script>
 ```
 
 Listen for data:
