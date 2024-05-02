@@ -3,12 +3,16 @@ from __future__ import unicode_literals
 
 import asyncio
 import copy
+import logging
 import threading
 from asgiref.sync import sync_to_async
 from django.http import HttpResponseBadRequest, StreamingHttpResponse
 from .utils import add_default_headers
 
 MAX_PENDING = 10
+
+
+logger = logging.getLogger(__name__)
 
 
 class Listener(object):
@@ -35,6 +39,7 @@ class ListenerManager(object):
 
     def add_listener(self, listener):
         self.lock.acquire()
+        logger.info(f"added listener {id(listener)}")
         try:
             for channel in listener.channels:
                 clisteners = self.listeners_by_channel.get(channel)
@@ -53,6 +58,7 @@ class ListenerManager(object):
                 clisteners.remove(listener)
                 if len(clisteners) == 0:
                     del self.listeners_by_channel[channel]
+            logger.info(f"removed listener {id(listener)}")
         finally:
             self.lock.release()
 
@@ -67,9 +73,11 @@ class ListenerManager(object):
                     items = []
                     listener.channel_items[channel] = items
                 if len(items) < MAX_PENDING:
+                    logger.info(f"queued event for listener {id(listener)}")
                     items.append(event)
                     wake.append(listener)
                 else:
+                    logger.info(f"could not queue event for listener {id(listener)}")
                     listener.overflow = True
             for listener in wake:
                 listener.wake_threadsafe()
@@ -83,6 +91,7 @@ class ListenerManager(object):
             listeners = self.listeners_by_channel.get(channel, set())
             for listener in listeners:
                 if listener.user_id == user_id:
+                    logger.info(f"setting error on listener {id(listener)}")
                     msg = "Permission denied to channels: %s" % channel
                     listener.error = {
                         "condition": "forbidden",
