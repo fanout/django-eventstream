@@ -11,7 +11,7 @@ class EventsViewSet(ViewSet):
     """
     A viewset to stream events to the client. Here you will be able to see the events in real time.
 
-    By default, this viewset will not stream any events, beacause you must configure the channels you want to see the events from.
+    By default, this viewset will not stream any events, because you must configure the channels you want to see the events from.
     To configure the channels, you can do it in three ways:
         - By setting the channels attribute in the class definition.
         - By setting the channels query parameter in the request.
@@ -19,7 +19,7 @@ class EventsViewSet(ViewSet):
     Those three ways are mutually exclusive, so you can only use one of them.
 
     If you want to see a specific type of messages and not the default "message" type, you can set the messages_types attribute in the class definition. 
-    That the only way provide to set the messages types.
+    That's the only way provided to set the messages types.
     """
     
     http_method_names = ['get']
@@ -30,8 +30,8 @@ class EventsViewSet(ViewSet):
     def __init__(self, channels: list = None, messages_types: list = None, *args, **kwargs):
         super().__init__()
         self.channels = channels if channels is not None else []
-        self.messages_types = messages_types if messages_types is not None else None
-        
+        self.messages_types = messages_types if messages_types is not None else []
+
     def get_renderers(self):
         if hasattr(settings, 'REST_FRAMEWORK'):
             api_settings = APISettings(user_settings=settings.REST_FRAMEWORK, defaults=None, import_strings=None)
@@ -42,14 +42,14 @@ class EventsViewSet(ViewSet):
             
             for renderer_class in default_renderers:
                 renderer_instance = renderer_class()
-                if renderer_instance.format == 'api_sse' :
+                if renderer_instance.format == 'api_sse':
                     api_sse_renderers.append(renderer_class)
                 if renderer_instance.format == 'text/event-stream':
                     sse_renderers.append(renderer_class)
 
             if len(api_sse_renderers) == 0:
                 self.no_api_sse_renderer = True
-            else :
+            else:
                 self.no_api_sse_renderer = False
             
             self.renderer_classes = api_sse_renderers + sse_renderers
@@ -60,15 +60,14 @@ class EventsViewSet(ViewSet):
         if len(self.channels) > 0 and request.query_params.get('channels'):
             return Response({"error": "Conflicting channel specifications in ViewSet configuration and query parameters."}, status=status.HTTP_400_BAD_REQUEST)
         
-        if self.messages_types :
-            if len(self.messages_types) > 0 and request.query_params.get('messages_types'):
+        if request.query_params.get('messages_types'):
+            if len(self.messages_types) > 0:
                 return Response({"error": "Conflicting messages types specifications in ViewSet configuration and query parameters."}, status=status.HTTP_400_BAD_REQUEST)
+            self.messages_types = request.query_params.get('messages_types', '').split(',')
         
-        self.messages_types = request.query_params.get('messages_types', '').split(',') if request.query_params.get('messages_types') else self.messages_types
-
-        if len(self.channels) == 0 :
+        if len(self.channels) == 0:
             self.channels = request.query_params.get('channels', '').split(',') if request.query_params.get('channels') else []
-
+        
         return self._stream_or_respond(self.channels, request)
 
     @action(detail=False, methods=['get'], url_path='(?P<channel>[^/.]+)')
@@ -84,20 +83,29 @@ class EventsViewSet(ViewSet):
 
     def _stream_or_respond(self, channels, django_request):
         request = django_request._request
-        data = {'channels': ', '.join(channels) or "", 'messages_types': ', '.join(self.messages_types) or "message"}
+        messages_types = self.messages_types if self.messages_types else ["message"]
+        data = {'channels': ', '.join(channels), 'messages_types': ', '.join(messages_types)}
+       
 
         if self._accepted_format(request, ['text/html']):
             return Response(data, status=status.HTTP_200_OK)
         elif self._accepted_format(request, ['text/event-stream', '*/*']):
-            return events(request, {'channels': channels})
+            kwargs = {'channels': channels}
+            return events(request, **kwargs)
 
         return Response({"error": "This endpoint only supports text/event-stream and text/html accept types."}, status=status.HTTP_400_BAD_REQUEST)
 
 def configure_events_view_set(channels=None, messages_types=None):
     """
-    Configure la classe EventsViewSet avec des canaux et des types de messages spécifiques.
+    Configure the EventsViewSet class with specific channels and message types.
     """
     class ConfiguredEventsViewSet(EventsViewSet):
         def __init__(self, *args, **kwargs):
             super().__init__(channels=channels, messages_types=messages_types, *args, **kwargs)
     return ConfiguredEventsViewSet
+
+class ChatEventsViewSet(EventsViewSet):
+    def list(self, request, room_id=None):
+        if room_id:
+            self.channels = [f"room-{room_id}"]
+        return super().list(request)
