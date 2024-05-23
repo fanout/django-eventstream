@@ -31,6 +31,7 @@ class EventsViewSet(ViewSet):
         super().__init__()
         self.channels = channels if channels is not None else []
         self.messages_types = messages_types if messages_types is not None else []
+        self._api_sse = False
 
     def get_renderers(self):
         if hasattr(settings, 'REST_FRAMEWORK'):
@@ -44,6 +45,7 @@ class EventsViewSet(ViewSet):
                 renderer_instance = renderer_class()
                 if renderer_instance.format == 'api_sse':
                     api_sse_renderers.append(renderer_class)
+                    self._api_sse = True
                 if renderer_instance.format == 'text/event-stream':
                     sse_renderers.append(renderer_class)
 
@@ -87,7 +89,7 @@ class EventsViewSet(ViewSet):
         data = {'channels': ', '.join(channels), 'messages_types': ', '.join(messages_types)}
        
 
-        if self._accepted_format(request, ['text/html']):
+        if self._accepted_format(request, ['text/html']) and self._api_sse:
             return Response(data, status=status.HTTP_200_OK)
         elif self._accepted_format(request, ['text/event-stream', '*/*']):
             kwargs = {'channels': channels}
@@ -103,9 +105,3 @@ def configure_events_view_set(channels=None, messages_types=None):
         def __init__(self, *args, **kwargs):
             super().__init__(channels=channels, messages_types=messages_types, *args, **kwargs)
     return ConfiguredEventsViewSet
-
-class ChatEventsViewSet(EventsViewSet):
-    def list(self, request, room_id=None):
-        if room_id:
-            self.channels = [f"room-{room_id}"]
-        return super().list(request)
