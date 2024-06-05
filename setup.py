@@ -20,8 +20,15 @@ setup(
         "django_eventstream.migrations",
         "django_eventstream.management",
         "django_eventstream.management.commands",
+        "django_eventstream.views",
+        "django_eventstream.renderers",
+        "django_eventstream.templates",
     ],
-    package_data={"django_eventstream": ["static/django_eventstream/*"]},
+    package_data={
+        "django_eventstream": [
+            "static/django_eventstream/**/*",
+        ]
+    },
     install_requires=[
         "Django>=5",
         "PyJWT>=1.5,<3",
@@ -29,6 +36,9 @@ setup(
         "django_grip>=3.0,<4",
         "six>=1.10,<2",
     ],
+    extras_require={
+        'drf': ['djangorestframework==3.15.1'],
+    },
     tests_require=["Django>=2.0"],
     test_suite="tests.runtests.runtests",
     classifiers=[
