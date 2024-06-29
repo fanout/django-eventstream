@@ -20,7 +20,6 @@ setup(
         "django_eventstream.migrations",
         "django_eventstream.management",
         "django_eventstream.management.commands",
-        "django_eventstream.views",
         "django_eventstream.renderers",
     ],
     package_data={

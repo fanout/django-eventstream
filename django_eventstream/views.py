@@ -7,7 +7,7 @@ import logging
 import threading
 from asgiref.sync import sync_to_async
 from django.http import HttpResponseBadRequest, StreamingHttpResponse
-from ..utils import add_default_headers
+from .utils import add_default_headers
 
 MAX_PENDING = 10
 
@@ -113,8 +113,8 @@ def get_listener_manager():
 
 
 async def stream(event_request, listener):
-    from ..eventstream import get_events, EventPermissionError
-    from ..utils import sse_encode_event, sse_encode_error, make_id
+    from .eventstream import get_events, EventPermissionError
+    from .utils import sse_encode_event, sse_encode_error, make_id
 
     get_events = sync_to_async(get_events)
 
@@ -248,9 +248,9 @@ async def stream(event_request, listener):
 
 
 def events(request, **kwargs):
-    from ..eventrequest import EventRequest
-    from ..eventstream import EventPermissionError, get_events
-    from ..utils import sse_error_response
+    from .eventrequest import EventRequest
+    from .eventstream import EventPermissionError, get_events
+    from .utils import sse_error_response
 
     try:
         event_request = EventRequest(request, view_kwargs=kwargs)

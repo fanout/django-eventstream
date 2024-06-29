@@ -146,7 +146,7 @@ To set up views with DRF, register them on the router:
 
 ```py
 from django.urls import path, include
-from django_eventstream.views import EventsViewSet, configure_events_view_set
+from django_eventstream.viewsets import EventsViewSet, configure_events_view_set
 
 router = DefaultRouter()
 

@@ -1,4 +1,4 @@
-from django_eventstream.views import EventsViewSet
+from django_eventstream.viewsets import EventsViewSet
 
 
 class ChatEventsViewSet(EventsViewSet):

@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.settings import APISettings
-from django_eventstream.views.eventstreamerview import events
+from django_eventstream.views import events
 from django_eventstream.renderers import (
     SSEEventRenderer,
     BrowsableAPIEventStreamRenderer,
