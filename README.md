@@ -1,12 +1,12 @@
 # Django EventStream
 
-EventStream provides API endpoints for your Django application that can push data to connected clients. Data is sent using the Server-Sent Events protocol (SSE), in which data is streamed over a never-ending HTTP response.
+EventStream provides Django views that can push data to connected clients. Data is sent using the Server-Sent Events protocol (SSE), in which data is streamed over a never-ending HTTP response.
 
 For example, you could create an endpoint, `/events/`, that a client could connect to with a GET request:
 
 ```http
 GET /events/ HTTP/1.1
-Host: api.example.com
+Host: example.com
 Accept: text/event-stream
 ```
 
@@ -32,30 +32,20 @@ Features:
 * Easy to consume from browsers or native applications.
 * Reliable delivery. Events can be persisted to your database, so clients can recover if they get disconnected.
 * Per-user channel permissions.
-
-## Dependencies
-
-- Django `>=5`
-- PyJWT `>=1.5, <3`
-- gripcontrol `>=4.0, <5`
-- django_grip `>=3.0, <4`
-- six `>=1.10, <2`
-
-### Optional Dependencies
-
-If your using the Django Rest Framework version of the module.
-
-- Django Rest Framework `==3.15` (for using the `ViewSet` and `router.register`).
-
-Those dependecies will be install automatically when you install this package.
+* Works with Django REST Framework.
 
 ## Setup
 
-### Without Django Rest Framework
 First, install this module and the daphne module:
 
 ```sh
 pip install django-eventstream daphne
+```
+
+Or, for Django REST Framework support, include `DRF` as an optional dependency:
+
+```sh
+pip install django-eventstream[DRF] daphne
 ```
 
 Add the `daphne` and `django_eventstream` apps to `settings.py`:
@@ -80,89 +70,24 @@ urlpatterns = [
 ]
 ```
 
+*For DRF, see [Views with Django REST Framework](#views-with-django-rest-framework)*
+
 That's it! If you run `python manage.py runserver`, clients will be able to connect to the `/events/` endpoint and get a stream.
 
-### With Django Rest Framework
-
-First, install this module with REST dependencies and the daphne module:
-
-```sh
-pip install django-eventstream[DRF] daphne
-```
-*Note: The `[DRF]` is a optional dependency that will install the Django Rest Framework module.*
-
-Add the `daphne` and `django_eventstream` apps to `settings.py`:
-
-```py
-INSTALLED_APPS = [
-    ...
-    "daphne",
-    "django_eventstream",
-]
-```
-
-Add an endpoint in `urls.py`:
-
-```py
-from django.urls import path, include
-from django_eventstream.views import EventsViewSet, configure_events_view_set
-
-router = DefaultRouter()
-
-# In theses examples, we are using the `configure_events_view_set` function to create a view set with the channels and messages_types that we want to use.
-router.register('events1', configure_events_view_set(channels=["channel1", "channel2",...], messages_types=["message","info",...]), basename='events1') 
-# Or you can create a view set and directly pass it to the router. You will be able to set the channels by URL or by query parameters. For messages_types you can set it by query parameters or use the default value "message".
-router.register('events2', EventsViewSet, basename='events2')
-
-urlpatterns = [
-    ...
-    path("", include(router.urls)), # Here we register the router urls
-]
-```
- *Note: These configurations are only applicable when using the Django Rest Framework version of the module (i.e., when the Django Rest Framework is installed).*
-
 ### Sending events
+
 To send data to clients, call `send_event`:
 
 ```py
 from django_eventstream import send_event
 
-#send_event(<channel>, <event_type>, <event_data>)
+# send_event(<channel>, <event_type>, <event_data>)
 send_event("test", "message", {"text": "hello world"})
 ```
 
 The first argument is the channel to send on, the second is the event type, and the third is the event data. The data will be JSON-encoded using `DjangoJSONEncoder`.
 
-*Note: In a basic setup, `send_event` must be called from within the server process (e.g. called from a view). It won't work if called from a separate process, such as from the shell or a management command, you could use Redis or another message queue to communicate between processes and after send your event.*
-
-*Be aware tha if you send message a message type error (or any type that used for the SSE protocol, like `open`, `error`, `close`...), the message maybe interpreted as a error message by the client.*
-
-### Disable the browsable api view sse for production [DRF]
-
-To disable the Browsable API view SSE for production, you can modify the `settings.py` of the project by adding the following lines as recommended by Django REST Framework:
-
-```python
-REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': (
-        # Add here the renderer classes you want to use
-    ),
-}
-```
-
-Next, manage the renderers you want to use with `DEFAULT_RENDERER_CLASSES`. In this example, you will need to use `django_eventstream.renderers.SSEEventRenderer` to enable SSE functionality. If you also want to use the Browsable API view, add `django_eventstream.renderers.BrowsableAPIEventStreamRenderer` if not do not add it :
-    
-/!\ And be careful to don't add the eventstream renderers before the JSONRenderer and BrowsableAPIRenderer (or other Renderer), otherwise the API will probably not work as expected.
-```python
-REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
-        'django_eventstream.renderers.SSEEventRenderer',
-        'django_eventstream.renderers.BrowsableAPIEventStreamRenderer'
-         # Add other renderers as needed
-    ]
-}
-```
+*Note: In a basic setup, `send_event` must be called from within the server process (e.g. called from a view). It won't work if called from a separate process, such as from the shell or a management command. To send events from separate processes, see [Multiple instances and scaling](#multiple-instances-and-scaling).*
 
 ### Deploying
 
@@ -178,7 +103,7 @@ WSGI mode can work too, but only in combination with a GRIP proxy. See [Multiple
 
 ### Multiple instances and scaling
 
-If you need to run multiple instances of your Django app for high availability or scalability, or need to send events from management commands, then you can introduce a GRIP proxy such as [Pushpin](https://pushpin.org) or [Fastly Fanout](https://developer.fastly.com/learning/concepts/real-time-messaging/fanout/) into your architecture. Otherwise, events originating from an instance will only be delivered to clients connected to that instance.
+If you need to run multiple instances of your Django app for high availability or scalability, or need to send events from management commands, then you can introduce a GRIP proxy such as [Pushpin](https://pushpin.org) or [Fastly Fanout](https://developer.fastly.com/learning/concepts/real-time-messaging/fanout/) into your architecture. Alternatively, you could use Redis or another message queue to communicate between processes, and call `send_event` from each one. Otherwise, events originating from an instance will only be delivered to clients connected to that instance.
 
 For example, to use Pushpin with your app, you need to do three things:
 
@@ -214,6 +139,53 @@ location /api/ {
 ```
 
 The `location` block above will pass all requests coming on `/api/` to Pushpin.
+
+### Views with Django REST Framework
+
+To set up views with DRF, register them on the router:
+
+```py
+from django.urls import path, include
+from django_eventstream.views import EventsViewSet, configure_events_view_set
+
+router = DefaultRouter()
+
+# register by function
+router.register(
+    "events1",
+    configure_events_view_set(channels=["channel1", "channel2"],
+    messages_types=["message", "info"]),
+    basename="events1")
+
+# register by class
+router.register(
+    "events2",
+    EventsViewSet(channels=["channel1", "channel2"]),
+    basename="events2")
+
+urlpatterns = [
+    ...
+    path("", include(router.urls)),
+]
+```
+
+Next, use `DEFAULT_RENDERER_CLASSES` in `settings.py` to manage the renderers you want to use. The `django_eventstream.renderers.SSEEventRenderer` is required to enable SSE functionality. If you also want the Browsable API view, add `django_eventstream.renderers.BrowsableAPIEventStreamRenderer`.
+
+Example:
+
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+        'django_eventstream.renderers.SSEEventRenderer',
+        'django_eventstream.renderers.BrowsableAPIEventStreamRenderer'
+         # Add other renderers as needed
+    ]
+}
+```
+
+Be careful to not add the eventstream renderers before the `JSONRenderer` and `BrowsableAPIRenderer` (or other Renderer), otherwise the API will probably not work as expected.
 
 ## Event storage
 
