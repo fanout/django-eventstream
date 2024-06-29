@@ -1,10 +1,10 @@
 function restoreKeepAliveStatus() {
     var savedStatus = localStorage.getItem('keepAliveStatus');
-    
+
     if (savedStatus !== null) {
         var keepAliveCheckbox = document.querySelector('input[name="keepAliveCheckbox"]');
         keepAliveCheckbox.checked = (savedStatus === 'true');
-        keepAliveDisplay(); 
+        keepAliveDisplay();
     }
 }
 
@@ -24,7 +24,7 @@ function startStream() {
     element.style.padding = '10px';
 
     clearButton.addEventListener('click', function() {
-        element.innerHTML = ''; 
+        element.innerHTML = '';
     });
 
     es.onopen = function () {
@@ -48,7 +48,7 @@ function startStream() {
         }
         addMessage(element, `<strong>Event - ${message_type} :</strong> ${data}`, '#2C2C2C', '#ECEFF1');
     }
-    
+
     if (messages_types) {
         messages_types = messages_types.replace(' ', '').split(',');
         messages_types.forEach(message_type => {
@@ -61,7 +61,7 @@ function startStream() {
             handleEvent('message', e.data);
         }, false);
     }
-    
+
 
     es.addEventListener('keep-alive', function (e) {
         addMessage(element, 'Keep alive event received', '#337ab7', '#E3F2FD', true);
@@ -100,7 +100,7 @@ function keepAliveDisplay() {
 function addMessage(container, text, textColor, backgroundColor, isKeepAlive) {
     var now = new Date();
     var timestamp = now.getHours() + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
-    
+
     var msg = document.createElement('div');
     msg.innerHTML = `<span style="font-size: 0.8em; color: #555;">${timestamp}</span> | ${text}`;
     msg.style.color = textColor;
@@ -109,7 +109,7 @@ function addMessage(container, text, textColor, backgroundColor, isKeepAlive) {
     msg.style.padding = '10px';
     msg.style.margin = '10px 0';
     msg.style.borderRadius = '5px';
-    
+
     to_scroll = true
 
     if (isKeepAlive) {

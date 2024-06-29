@@ -9,20 +9,20 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var hostname = window.location.hostname;
-            var port8000 = ':8000'; 
-            var port9000 = ':9000'; 
-    
+            var port8000 = ':8000';
+            var port9000 = ':9000';
+
             var link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = `http://${hostname}${port8000}/static/rest_framework/css/bootstrap.min.css`;
             document.head.appendChild(link);
-    
+
             var script = document.createElement('script');
             script.src = `http://${hostname}${port9000}/static/js/jquery-3.2.1.min.js`;
             script.onload = function() {
                 $(function () {
                     var baseUrl = `http://${window.location.hostname}:8000`;
-  
+
                     $.get(`${baseUrl}/rooms/`, function(data) {
                         if (data.length === 0) {
                             $.post(`${baseUrl}/rooms/`, {eid: 'general'}, function(data) {
@@ -33,7 +33,7 @@
                             $('#room-select').append(`<option value="${room.eid}">${room.eid}</option>`);
                         });
                     });
-  
+
                     $('#join-button').on('click', function () {
                         var user = $('#nick-input').val();
                         var roomID = $('#room-select').val();
@@ -43,7 +43,7 @@
                             window.location = '/chat.html';
                         }
                     });
-  
+
                     $('#nick-input').focus();
                 });
             };
@@ -75,6 +75,6 @@
     </div>
 </div>
 
-  
+
 </body>
 </html>

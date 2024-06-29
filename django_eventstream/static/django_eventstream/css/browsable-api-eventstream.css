@@ -10,7 +10,7 @@ hr {
 }
 
 #clearMessages, #clearMessages .typ, #clearMessages span {
-  color: white !important; 
+  color: white !important;
 }
 
 #sse-stream {
@@ -44,7 +44,7 @@ hr {
 }
 
 .fade-out {
-  animation: fadeOut 0.6s forwards; 
+  animation: fadeOut 0.6s forwards;
 }
 
 

@@ -1,9 +1,9 @@
 {% load static %}
 {% load i18n %}
 {% load rest_framework %}
-<!-- 
+<!--
   base on the base.html template file of https://github.com/encode/django-rest-framework
-  here is the file : https://github.com/encode/django-rest-framework/blob/f4194c4684420ac86485d9610adf760064db381f/rest_framework/templates/rest_framework/base.html 
+  here is the file : https://github.com/encode/django-rest-framework/blob/f4194c4684420ac86485d9610adf760064db381f/rest_framework/templates/rest_framework/base.html
 -->
 <!DOCTYPE html>
 <html>
@@ -16,7 +16,7 @@
       {% endblock %}
 
       <title>{% block title %}{% if name %}{{ name }} – {% endif %}Django REST framework{% endblock %}</title>
-      
+
       {% block style %}
         {% block bootstrap_theme %}
           <link rel="stylesheet" type="text/css" href="{% static "rest_framework/css/bootstrap.min.css" %}"/>
@@ -29,7 +29,7 @@
       {% endblock %}
 
     {% endblock %}
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="{% static "django_eventstream/css/browsable-api-eventstream.css" %}">
   </head>
