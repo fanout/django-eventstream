@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     "chat",
 ]
 
-# Be carefull do not place the sse renderer or the browsable api event stream renderer in before orther renderer if you use them.
+# Be careful do not place the sse renderer or the browsable api event stream renderer in before other renderers if you use them.
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
