@@ -22,11 +22,11 @@ setup(
         "django_eventstream.management.commands",
         "django_eventstream.views",
         "django_eventstream.renderers",
-        "django_eventstream.templates",
     ],
     package_data={
         "django_eventstream": [
             "static/django_eventstream/**/*",
+            "templates/django_eventstream/**/*",
         ]
     },
     install_requires=[
