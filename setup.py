@@ -37,7 +37,7 @@ setup(
         "six>=1.10,<2",
     ],
     extras_require={
-        'drf': ['djangorestframework==3.15.1'],
+        "drf": ["djangorestframework==3.15.1"],
     },
     tests_require=["Django>=2.0"],
     test_suite="tests.runtests.runtests",

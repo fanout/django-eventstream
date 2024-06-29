@@ -36,24 +36,24 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'corsheaders',
+    "corsheaders",
     "rest_framework",
     "django_eventstream",
     "chat",
 ]
 
-#Be carefull do not place the sse renderer or the browsable api event stream renderer in before orther renderer if you use them.
+# Be carefull do not place the sse renderer or the browsable api event stream renderer in before orther renderer if you use them.
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
-        'django_eventstream.renderers.SSEEventRenderer',
-        'django_eventstream.renderers.BrowsableAPIEventStreamRenderer'
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+        "django_eventstream.renderers.SSEEventRenderer",
+        "django_eventstream.renderers.BrowsableAPIEventStreamRenderer",
     ]
 }
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',    
+    "corsheaders.middleware.CorsMiddleware",
     "django_grip.GripMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",

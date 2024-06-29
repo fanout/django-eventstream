@@ -19,7 +19,7 @@ EVENT_TIMEOUT = 60 * 24
 # attempt to trim this many events per pass
 EVENT_TRIM_BATCH = 50
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class EventDoesNotExist(Exception):
@@ -52,8 +52,8 @@ class StorageBase(object):
 class RedisStorage(StorageBase):
     def __init__(self) -> None:
         """
-            Initializes the RedisModelStorage instance by getting Redis connection details
-            from settings and setting storage timeout.
+        Initializes the RedisModelStorage instance by getting Redis connection details
+        from settings and setting storage timeout.
         """
         self.connection_details = self._get_redis_connection_details()
         self.redis_client = None
@@ -61,33 +61,36 @@ class RedisStorage(StorageBase):
     @staticmethod
     def _get_redis_connection_details() -> Dict[str, any]:
         """
-            Static method to retrieve Redis connection details from settings.
+        Static method to retrieve Redis connection details from settings.
 
-            Returns:
-                dict: Redis connection details including host, port, and other configuration parameters.
+        Returns:
+            dict: Redis connection details including host, port, and other configuration parameters.
         """
         connection_details = getattr(settings, "EVENTSTREAM_STORAGE_CONNECTION")
         if not isinstance(connection_details, dict):
             raise IncompatibleSettings(
-                "To use Redis as event stream storage, please set the connection details of Redis in settings.py EVENTSTREAM_STORAGE_CONNECTION")
+                "To use Redis as event stream storage, please set the connection details of Redis in settings.py EVENTSTREAM_STORAGE_CONNECTION"
+            )
         return deepcopy(connection_details)
 
     def _connect(self):
         """
-            Connects to the Redis server using the provided connection details.
+        Connects to the Redis server using the provided connection details.
 
-            Returns:
-                Redis: A Redis client instance.
+        Returns:
+            Redis: A Redis client instance.
 
-            Raises:
-                RedisPackageIsNotAvailable: If the Redis package is not available.
+        Raises:
+            RedisPackageIsNotAvailable: If the Redis package is not available.
         """
         try:
             import redis
+
             return redis.Redis(**self.connection_details)
         except ModuleNotFoundError:
             raise RedisPackageIsNotAvailable(
-                "Redis package is not available. Please install it using !pip install redis")
+                "Redis package is not available. Please install it using !pip install redis"
+            )
 
     @property
     def redis(self):
@@ -116,11 +119,12 @@ class RedisStorage(StorageBase):
         with self.redis.pipeline() as pipe:
             try:
                 event_id = pipe.incr("event_counter:" + channel)
-                event_data = json.dumps({
-                    "type": event_type,
-                    "data": data
-                })
-                pipe.setex("event:" + channel + ":" + str(event_id), EVENT_TIMEOUT * 60, event_data)
+                event_data = json.dumps({"type": event_type, "data": data})
+                pipe.setex(
+                    "event:" + channel + ":" + str(event_id),
+                    EVENT_TIMEOUT * 60,
+                    event_data,
+                )
                 pipe.execute()
                 return Event(channel, event_type, data, id=event_id)
             except ConnectionError as e:

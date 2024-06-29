@@ -6,18 +6,19 @@ from django.db import IntegrityError, transaction
 from chat.serializers import ChatMessageSerializer
 from django_eventstream import send_event
 
+
 class ChatMessageViewSet(viewsets.ModelViewSet):
     queryset = ChatMessage.objects.all()
     serializer_class = ChatMessageSerializer
-    
+
     def get_queryset(self):
         """Filtrer les messages par 'room_id' passé dans l'URL."""
-        room_id = self.kwargs['room_id']
-        
+        room_id = self.kwargs["room_id"]
+
         return self.queryset.filter(room_id=room_id)
-    
+
     def create(self, request, *args, **kwargs):
-        room_id = self.kwargs['room_id']
+        room_id = self.kwargs["room_id"]
         try:
             room = ChatRoom.objects.get(eid=room_id)
         except ChatRoom.DoesNotExist:

@@ -8,24 +8,41 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='ChatRoom',
+            name="ChatRoom",
             fields=[
-                ('eid', models.CharField(max_length=64, primary_key=True, serialize=False, unique=True)),
+                (
+                    "eid",
+                    models.CharField(
+                        max_length=64, primary_key=True, serialize=False, unique=True
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='ChatMessage',
+            name="ChatMessage",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('user', models.CharField(max_length=64)),
-                ('date', models.DateTimeField(auto_now=True, db_index=True)),
-                ('text', models.TextField()),
-                ('room', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='chat.chatroom')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("user", models.CharField(max_length=64)),
+                ("date", models.DateTimeField(auto_now=True, db_index=True)),
+                ("text", models.TextField()),
+                (
+                    "room",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="chat.chatroom"
+                    ),
+                ),
             ],
         ),
     ]

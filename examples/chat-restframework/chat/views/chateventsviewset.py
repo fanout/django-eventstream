@@ -1,6 +1,7 @@
 from django_eventstream.views import EventsViewSet
 
-class ChatEventsViewSet(EventsViewSet) :
+
+class ChatEventsViewSet(EventsViewSet):
 
     def list(self, request, room_id=None):
         if room_id:
