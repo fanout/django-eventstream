@@ -58,7 +58,7 @@ class ListenerManager(object):
                 clisteners.remove(listener)
                 if len(clisteners) == 0:
                     del self.listeners_by_channel[channel]
-                logger.info(f"removed listener {id(listener)}")
+            logger.info(f"removed listener {id(listener)}")
         finally:
             self.lock.release()
 
