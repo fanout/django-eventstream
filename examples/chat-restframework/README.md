@@ -18,7 +18,7 @@ touch .env
 python manage.py migrate
 ```
 
-Note: The `django_eventstream` library doesn't get installed and instead you need to install it with `pip install ../../[DRF]` to install the Django Rest Framework version of the library from local source.
+Note: The `django_eventstream` library doesn't get installed and instead you need to install it with `pip install "../../[drf]"` to install the Django Rest Framework version of the library from local source.
 
 Run the REST API server:
 
