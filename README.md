@@ -42,10 +42,10 @@ First, install this module and the daphne module:
 pip install django-eventstream daphne
 ```
 
-Or, for Django REST Framework support, include `DRF` as an optional dependency:
+Or, for Django REST Framework support, include the optional `drf` dependency:
 
 ```sh
-pip install django-eventstream[DRF] daphne
+pip install django-eventstream[drf] daphne
 ```
 
 Add the `daphne` and `django_eventstream` apps to `settings.py`:
@@ -70,7 +70,7 @@ urlpatterns = [
 ]
 ```
 
-*For DRF, see [Views with Django REST Framework](#views-with-django-rest-framework)*
+*For DRF views, see [Views with Django REST Framework](#views-with-django-rest-framework)*
 
 That's it! If you run `python manage.py runserver`, clients will be able to connect to the `/events/` endpoint and get a stream.
 
