@@ -181,7 +181,7 @@
               </div>
 
               <div class="response-info" aria-label="{% trans "response info" %}">
-                <pre class="prettyprint" style="height: 590px;"><span class="meta nocode"><b>HTTP {{ response.status_code }} {{ response.status_text }}</b>{% for key, val in response_headers|items %}
+                <pre class="prettyprint"><span class="meta nocode"><b>HTTP {{ response.status_code }} {{ response.status_text }}</b>{% for key, val in response_headers|items %}
 <b>{{ key }}:</b> <span class="lit">{{ val|break_long_headers|urlize }}</span>{% endfor %}
 {% if channels %}<b>Listen channels:</b> <span class="lit">{{ channels }}</span>{% endif %}
 <b>Listen messages types:</b> <span class="lit">{{ messages_types }}</span>
