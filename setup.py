@@ -24,8 +24,8 @@ setup(
     ],
     package_data={
         "django_eventstream": [
-            "static/django_eventstream",
-            "templates/django_eventstream",
+            "static/django_eventstream/*",
+            "templates/django_eventstream/*",
         ]
     },
     install_requires=[
