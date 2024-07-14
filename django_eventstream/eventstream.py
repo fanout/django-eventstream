@@ -19,6 +19,17 @@ class EventPermissionError(Exception):
             channels = []
         self.channels = copy.deepcopy(channels)
 
+import redis
+from django.conf import settings
+
+# Configuration de la connexion Redis
+redis_client = None
+if getattr(settings, 'EVENTSTREAM_USE_REDIS', False):
+    redis_client = redis.StrictRedis(
+        host=getattr(settings, 'EVENTSTREAM_REDIS_HOST', 'localhost'),
+        port=getattr(settings, 'EVENTSTREAM_REDIS_PORT', 6379),
+        db=getattr(settings, 'EVENTSTREAM_REDIS_DB', 0)
+    )
 
 def send_event(
     channel, event_type, data, skip_user_ids=None, async_publish=True, json_encode=True
@@ -44,10 +55,10 @@ def send_event(
         pub_id = None
         pub_prev_id = None
 
-    # send to local listeners
+    # Send to local listeners
     get_listener_manager().add_to_queues(channel, e)
 
-    # publish through grip proxy
+    # Publish through grip proxy
     publish_event(
         channel,
         event_type,
@@ -58,6 +69,15 @@ def send_event(
         blocking=(not async_publish),
     )
 
+    # Publish event to Redis Pub/Sub if enabled
+    if redis_client:
+        redis_message = {
+            'channel': channel,
+            'event_type': event_type,
+            'data': data,
+            'skip_user_ids': skip_user_ids
+        }
+        redis_client.publish('events_channel', json.dumps(redis_message))
 
 def get_events(request, limit=100, user=None):
     if user is None:

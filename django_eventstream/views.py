@@ -9,6 +9,12 @@ from asgiref.sync import sync_to_async
 from django.http import HttpResponseBadRequest, StreamingHttpResponse
 from .utils import add_default_headers
 
+
+import threading
+import json
+import redis
+from django.conf import settings
+
 MAX_PENDING = 10
 
 
@@ -32,10 +38,55 @@ class Listener(object):
         self.loop.call_soon_threadsafe(self.aevent.set)
 
 
+
+class RedisListener:
+    def __init__(self, redis_client):
+        self.redis_client = redis_client
+        self.pubsub = self.redis_client.pubsub()
+        self.pubsub.subscribe('events_channel')
+        self.thread = threading.Thread(target=self.listen)
+        self.thread.daemon = True  # Permet au thread de s'arrêter avec le programme principal
+
+    def listen(self):
+        for message in self.pubsub.listen():
+            if message['type'] == 'message':
+                event_data = json.loads(message['data'])
+                channel = event_data['channel']
+                event_type = event_data['event_type']
+                data = event_data['data']
+                skip_user_ids = event_data['skip_user_ids']
+
+                from .event import Event
+                from .views import get_listener_manager
+
+                e = Event(channel, event_type, data)
+
+                # Notify local listeners
+                get_listener_manager().add_to_queues(channel, e)
+
+    def start(self):
+        self.thread.start()
+        
+import redis
+from django.conf import settings
+
+# Configuration de la connexion Redis
+redis_client = None
+if getattr(settings, 'EVENTSTREAM_USE_REDIS', False):
+    redis_client = redis.StrictRedis(
+        host=getattr(settings, 'EVENTSTREAM_REDIS_HOST', 'localhost'),
+        port=getattr(settings, 'EVENTSTREAM_REDIS_PORT', 6379),
+        db=getattr(settings, 'EVENTSTREAM_REDIS_DB', 0)
+    )
+
 class ListenerManager(object):
     def __init__(self):
         self.lock = threading.Lock()
         self.listeners_by_channel = {}
+        self.redis_listener = None
+        if redis_client:
+            self.redis_listener = RedisListener(redis_client)
+            self.redis_listener.start()
 
     def add_listener(self, listener):
         self.lock.acquire()
