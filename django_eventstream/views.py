@@ -9,6 +9,8 @@ from asgiref.sync import sync_to_async
 from django.http import HttpResponseBadRequest, StreamingHttpResponse
 from .utils import add_default_headers
 
+import redis
+from django.conf import settings
 
 import threading
 import json
@@ -40,8 +42,12 @@ class Listener(object):
 
 
 class RedisListener:
-    def __init__(self, redis_client):
-        self.redis_client = redis_client
+    def __init__(self):
+        self.redis_client = redis.StrictRedis(
+            host=getattr(settings, 'EVENTSTREAM_REDIS_HOST', 'localhost'),
+            port=getattr(settings, 'EVENTSTREAM_REDIS_PORT', 6379),
+            db=getattr(settings, 'EVENTSTREAM_REDIS_DB', 0)
+        )
         self.pubsub = self.redis_client.pubsub()
         self.pubsub.subscribe('events_channel')
         self.thread = threading.Thread(target=self.listen)
@@ -65,27 +71,15 @@ class RedisListener:
                 get_listener_manager().add_to_queues(channel, e)
 
     def start(self):
-        self.thread.start()
-        
-import redis
-from django.conf import settings
-
-# Configuration de la connexion Redis
-redis_client = None
-if getattr(settings, 'EVENTSTREAM_USE_REDIS', False):
-    redis_client = redis.StrictRedis(
-        host=getattr(settings, 'EVENTSTREAM_REDIS_HOST', 'localhost'),
-        port=getattr(settings, 'EVENTSTREAM_REDIS_PORT', 6379),
-        db=getattr(settings, 'EVENTSTREAM_REDIS_DB', 0)
-    )
+        self.thread.start()    
 
 class ListenerManager(object):
     def __init__(self):
         self.lock = threading.Lock()
         self.listeners_by_channel = {}
         self.redis_listener = None
-        if redis_client:
-            self.redis_listener = RedisListener(redis_client)
+        if getattr(settings, 'EVENTSTREAM_USE_REDIS', False):
+            self.redis_listener = RedisListener()
             self.redis_listener.start()
 
     def add_listener(self, listener):

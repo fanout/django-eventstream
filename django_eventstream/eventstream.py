@@ -1,5 +1,6 @@
 import copy
 import json
+import redis
 from django.core.serializers.json import DjangoJSONEncoder
 from .storage import EventDoesNotExist
 from .eventresponse import EventResponse
@@ -10,6 +11,7 @@ from .utils import (
     get_storage,
     get_channelmanager,
 )
+from django.conf import settings
 
 
 class EventPermissionError(Exception):
@@ -19,8 +21,7 @@ class EventPermissionError(Exception):
             channels = []
         self.channels = copy.deepcopy(channels)
 
-import redis
-from django.conf import settings
+
 
 # Configuration de la connexion Redis
 redis_client = None
