@@ -17,10 +17,16 @@ import json
 import redis
 from django.conf import settings
 
+import asyncio
+import json
+import logging
+from redis.asyncio import Redis
+from django.conf import settings
+
 MAX_PENDING = 10
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("django_eventstream")
 
 
 class Listener(object):
@@ -43,18 +49,17 @@ class Listener(object):
 
 class RedisListener:
     def __init__(self):
-        self.redis_client = redis.StrictRedis(
+        self.redis_client = Redis(
             host=getattr(settings, 'EVENTSTREAM_REDIS_HOST', 'localhost'),
             port=getattr(settings, 'EVENTSTREAM_REDIS_PORT', 6379),
             db=getattr(settings, 'EVENTSTREAM_REDIS_DB', 0)
         )
         self.pubsub = self.redis_client.pubsub()
-        self.pubsub.subscribe('events_channel')
-        self.thread = threading.Thread(target=self.listen)
-        self.thread.daemon = True  # Permet au thread de s'arrêter avec le programme principal
 
-    def listen(self):
-        for message in self.pubsub.listen():
+    async def listen(self):
+        logger.error("listening to redis")
+        await self.pubsub.subscribe('events_channel')
+        async for message in self.pubsub.listen():
             if message['type'] == 'message':
                 event_data = json.loads(message['data'])
                 channel = event_data['channel']
@@ -70,46 +75,49 @@ class RedisListener:
                 # Notify local listeners
                 get_listener_manager().add_to_queues(channel, e)
 
-    def start(self):
-        self.thread.start()    
+    async def start(self):
+        logger.error("starting redis listener")
+        await self.listen()
 
-class ListenerManager(object):
+class ListenerManager:
     def __init__(self):
         self.lock = threading.Lock()
         self.listeners_by_channel = {}
         self.redis_listener = None
-        if getattr(settings, 'EVENTSTREAM_USE_REDIS', False):
-            self.redis_listener = RedisListener()
-            self.redis_listener.start()
+        
+
+    async def start_redis_listener(self):
+        logger.error("starting redis listener")
+        await self.redis_listener.start()
 
     def add_listener(self, listener):
-        self.lock.acquire()
-        logger.info(f"added listener {id(listener)}")
-        try:
+        if getattr(settings, 'EVENTSTREAM_USE_REDIS', False):
+            self.redis_listener = RedisListener()
+            # asyncio.ensure_future(self.start_redis_listener())
+            logger.error("starting redis listener with the loop")
+            loop = asyncio.get_event_loop()
+            loop.create_task(self.start_redis_listener())
+            logger.error("started redis listener with the loop")
+        with self.lock:
+            logger.error(f"added listener {id(listener)}")
             for channel in listener.channels:
                 clisteners = self.listeners_by_channel.get(channel)
                 if clisteners is None:
                     clisteners = set()
                     self.listeners_by_channel[channel] = clisteners
                 clisteners.add(listener)
-        finally:
-            self.lock.release()
 
     def remove_listener(self, listener):
-        self.lock.acquire()
-        try:
+        with self.lock:
             for channel in listener.channels:
                 clisteners = self.listeners_by_channel.get(channel)
                 clisteners.remove(listener)
                 if len(clisteners) == 0:
                     del self.listeners_by_channel[channel]
-            logger.info(f"removed listener {id(listener)}")
-        finally:
-            self.lock.release()
+            logger.error(f"removed listener {id(listener)}")
 
     def add_to_queues(self, channel, event):
-        self.lock.acquire()
-        try:
+        with self.lock:
             wake = []
             listeners = self.listeners_by_channel.get(channel, set())
             for listener in listeners:
@@ -118,25 +126,22 @@ class ListenerManager(object):
                     items = []
                     listener.channel_items[channel] = items
                 if len(items) < MAX_PENDING:
-                    logger.info(f"queued event for listener {id(listener)}")
+                    logger.error(f"queued event for listener {id(listener)}")
                     items.append(event)
                     wake.append(listener)
                 else:
-                    logger.info(f"could not queue event for listener {id(listener)}")
+                    logger.error(f"could not queue event for listener {id(listener)}")
                     listener.overflow = True
             for listener in wake:
                 listener.wake_threadsafe()
-        finally:
-            self.lock.release()
 
     def kick(self, user_id, channel):
-        self.lock.acquire()
-        try:
+        with self.lock:
             wake = []
             listeners = self.listeners_by_channel.get(channel, set())
             for listener in listeners:
                 if listener.user_id == user_id:
-                    logger.info(f"setting error on listener {id(listener)}")
+                    logger.error(f"setting error on listener {id(listener)}")
                     msg = "Permission denied to channels: %s" % channel
                     listener.error = {
                         "condition": "forbidden",
@@ -146,9 +151,6 @@ class ListenerManager(object):
                     wake.append(listener)
             for listener in wake:
                 listener.wake_threadsafe()
-        finally:
-            self.lock.release()
-
 
 listener_manager = ListenerManager()
 
