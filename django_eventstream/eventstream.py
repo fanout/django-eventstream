@@ -56,9 +56,6 @@ def send_event(
         pub_id = None
         pub_prev_id = None
 
-    # Send to local listeners
-    get_listener_manager().add_to_queues(channel, e)
-
     # Publish through grip proxy
     publish_event(
         channel,
@@ -79,6 +76,9 @@ def send_event(
             'skip_user_ids': skip_user_ids
         }
         redis_client.publish('events_channel', json.dumps(redis_message))
+    else :
+        # Send to local listeners
+        get_listener_manager().add_to_queues(channel, e)
 
 def get_events(request, limit=100, user=None):
     if user is None:

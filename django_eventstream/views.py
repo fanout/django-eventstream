@@ -79,7 +79,7 @@ class RedisListener:
         logger.error("starting redis listener")
         await self.listen()
 
-class ListenerManager:
+class ListenerManager(object):
     def __init__(self):
         self.lock = threading.Lock()
         self.listeners_by_channel = {}
