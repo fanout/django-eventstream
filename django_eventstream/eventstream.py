@@ -1,6 +1,5 @@
 import copy
 import json
-import redis
 from django.core.serializers.json import DjangoJSONEncoder
 from .storage import EventDoesNotExist
 from .eventresponse import EventResponse
@@ -26,7 +25,12 @@ class EventPermissionError(Exception):
 # Configuration de la connexion Redis
 redis_client = None
 if getattr(settings, 'EVENTSTREAM_USE_REDIS', False):
-    redis_client = redis.StrictRedis(
+    try:
+        import redis
+    except ImportError:
+        raise ImportError("You must install the redis package to use RedisListener for multiprocess event handling. \n pip install redis")
+    
+    redis_client = redis.Redis(
         host=getattr(settings, 'EVENTSTREAM_REDIS_HOST', 'localhost'),
         port=getattr(settings, 'EVENTSTREAM_REDIS_PORT', 6379),
         db=getattr(settings, 'EVENTSTREAM_REDIS_DB', 0)
