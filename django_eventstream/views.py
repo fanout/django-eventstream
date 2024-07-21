@@ -80,7 +80,8 @@ class ListenerManager(object):
     def add_listener(self, listener):
         if self.redis_listener:
             loop = asyncio.get_event_loop()
-            loop.create_task(self.start_redis_listener())
+            if not self.redis_listener.pubsub.subscribed:
+                loop.create_task(self.start_redis_listener())
             
         with self.lock:
             for channel in listener.channels:
