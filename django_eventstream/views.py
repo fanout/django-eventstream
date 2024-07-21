@@ -11,6 +11,10 @@ from django.http import HttpResponseBadRequest, StreamingHttpResponse
 from .utils import add_default_headers
 from django.conf import settings
 
+
+import logging
+logger = logging.getLogger("django_eventstream")
+
 MAX_PENDING = 10
 
 class Listener(object):
@@ -37,12 +41,8 @@ class RedisListener(object):
             from redis.asyncio import Redis
         except ImportError:
             raise ImportError("You must install the redis package to use RedisListener for multiprocess event handling. \n pip install redis")
-        
-        self.redis_client = Redis(
-            host=getattr(settings, 'EVENTSTREAM_REDIS_HOST', 'localhost'),
-            port=getattr(settings, 'EVENTSTREAM_REDIS_PORT', 6379),
-            db=getattr(settings, 'EVENTSTREAM_REDIS_DB', 0)
-        )
+
+        self.redis_client = Redis(**settings.EVENTSTREAM_REDIS)
         self.pubsub = self.redis_client.pubsub()
 
     async def listen(self):
@@ -71,24 +71,24 @@ class ListenerManager(object):
         self.lock = threading.Lock()
         self.listeners_by_channel = {}
         self.redis_listener = None
-        if getattr(settings, 'EVENTSTREAM_USE_REDIS', False):
+        if hasattr(settings, 'EVENTSTREAM_REDIS'):
             self.redis_listener = RedisListener()
 
     async def start_redis_listener(self):
         await self.redis_listener.start()
 
     def add_listener(self, listener):
-        if getattr(settings, 'EVENTSTREAM_USE_REDIS', False):
+        if self.redis_listener:
             loop = asyncio.get_event_loop()
             loop.create_task(self.start_redis_listener())
-        else :
-            with self.lock:
-                for channel in listener.channels:
-                    clisteners = self.listeners_by_channel.get(channel)
-                    if clisteners is None:
-                        clisteners = set()
-                        self.listeners_by_channel[channel] = clisteners
-                    clisteners.add(listener)
+            
+        with self.lock:
+            for channel in listener.channels:
+                clisteners = self.listeners_by_channel.get(channel)
+                if clisteners is None:
+                    clisteners = set()
+                    self.listeners_by_channel[channel] = clisteners
+                clisteners.add(listener)
 
     def remove_listener(self, listener):
         with self.lock:

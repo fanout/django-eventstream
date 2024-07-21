@@ -103,7 +103,7 @@ WSGI mode can work too, but only in combination with a GRIP proxy. See [Multiple
 
 ### Multiple instances and scaling
 
-If you need to run multiple instances of your Django app for high availability or scalability, or need to send events from management commands, then you can introduce a GRIP proxy such as [Pushpin](https://pushpin.org) or [Fastly Fanout](https://developer.fastly.com/learning/concepts/real-time-messaging/fanout/) into your architecture. Alternatively, you could use Redis or another message queue to communicate between processes, and call `send_event` from each one. Otherwise, events originating from an instance will only be delivered to clients connected to that instance.
+If you need to run multiple instances of your Django app for high availability or scalability, or need to send events from management commands, then you can introduce a GRIP proxy such as [Pushpin](https://pushpin.org) or [Fastly Fanout](https://developer.fastly.com/learning/concepts/real-time-messaging/fanout/) into your architecture.
 
 For example, to use Pushpin with your app, you need to do three things:
 
@@ -139,6 +139,26 @@ location /api/ {
 ```
 
 The `location` block above will pass all requests coming on `/api/` to Pushpin.
+
+### Sending events between processes and instances
+
+Django EventStream provide the possibility ti use Redis as a message broker to send events between processes and instances. To enable this feature, you need to install the `redis` package:
+
+```sh
+pip install redis
+```
+
+Then, you need to configure the `EVENTSTREAM_REDIS` setting in your `settings.py`:
+
+```py
+EVENTSTREAM_REDIS = {
+    'host': 'redis',
+    'port': 6379,
+    'db': 0,
+}
+```
+
+With this configuration, the `send_event` function will be able to send events from any process or instance of your application.
 
 ### Views with Django REST Framework
 

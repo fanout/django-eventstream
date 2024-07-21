@@ -12,6 +12,9 @@ from .utils import (
 )
 from django.conf import settings
 
+import logging
+logger = logging.getLogger("django_eventstream")
+
 
 class EventPermissionError(Exception):
     def __init__(self, message, channels=None):
@@ -24,17 +27,13 @@ class EventPermissionError(Exception):
 
 # Configuration de la connexion Redis
 redis_client = None
-if getattr(settings, 'EVENTSTREAM_USE_REDIS', False):
+if hasattr(settings, 'EVENTSTREAM_REDIS'):
     try:
         import redis
     except ImportError:
         raise ImportError("You must install the redis package to use RedisListener for multiprocess event handling. \n pip install redis")
     
-    redis_client = redis.Redis(
-        host=getattr(settings, 'EVENTSTREAM_REDIS_HOST', 'localhost'),
-        port=getattr(settings, 'EVENTSTREAM_REDIS_PORT', 6379),
-        db=getattr(settings, 'EVENTSTREAM_REDIS_DB', 0)
-    )
+    redis_client = redis.Redis(**settings.EVENTSTREAM_REDIS)
 
 def send_event(
     channel, event_type, data, skip_user_ids=None, async_publish=True, json_encode=True
