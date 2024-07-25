@@ -11,9 +11,7 @@ from django.http import HttpResponseBadRequest, StreamingHttpResponse
 from .utils import add_default_headers
 from django.conf import settings
 
-
-import logging
-logger = logging.getLogger("django_eventstream")
+logger = logging.getLogger(__name__)
 
 MAX_PENDING = 10
 
@@ -56,7 +54,6 @@ class RedisListener(object):
                 skip_user_ids = event_data['skip_user_ids']
 
                 from .event import Event
-                from .views import get_listener_manager
 
                 e = Event(channel, event_type, data)
 
@@ -71,6 +68,7 @@ class ListenerManager(object):
         self.lock = threading.Lock()
         self.listeners_by_channel = {}
         self.redis_listener = None
+        self.redis_listener_started = False
         if hasattr(settings, 'EVENTSTREAM_REDIS'):
             self.redis_listener = RedisListener()
 
@@ -80,8 +78,10 @@ class ListenerManager(object):
     def add_listener(self, listener):
         if self.redis_listener:
             loop = asyncio.get_event_loop()
-            if not self.redis_listener.pubsub.subscribed:
-                loop.create_task(self.start_redis_listener())
+            with self.lock:
+                if not self.redis_listener_started:
+                    loop.create_task(self.start_redis_listener())
+                    self.redis_listener_started = True
             
         with self.lock:
             for channel in listener.channels:
@@ -98,6 +98,7 @@ class ListenerManager(object):
                 clisteners.remove(listener)
                 if len(clisteners) == 0:
                     del self.listeners_by_channel[channel]
+            logger.info(f"removed listener {id(listener)}")
 
     def add_to_queues(self, channel, event):
         with self.lock:

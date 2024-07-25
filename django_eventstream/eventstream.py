@@ -1,5 +1,6 @@
 import copy
 import json
+import logging
 from django.core.serializers.json import DjangoJSONEncoder
 from .storage import EventDoesNotExist
 from .eventresponse import EventResponse
@@ -12,8 +13,7 @@ from .utils import (
 )
 from django.conf import settings
 
-import logging
-logger = logging.getLogger("django_eventstream")
+logger = logging.getLogger(__name__)
 
 
 class EventPermissionError(Exception):
@@ -58,6 +58,18 @@ def send_event(
         e = Event(channel, event_type, data)
         pub_id = None
         pub_prev_id = None
+        
+    # Publish event to Redis Pub/Sub if enabled
+    if redis_client:
+        redis_message = {
+            'channel': channel,
+            'event_type': event_type,
+            'data': data,
+        }
+        redis_client.publish('events_channel', json.dumps(redis_message))
+    else :
+        # Send to local listeners
+        get_listener_manager().add_to_queues(channel, e)
 
     # Publish through grip proxy
     publish_event(
@@ -69,19 +81,6 @@ def send_event(
         skip_user_ids=skip_user_ids,
         blocking=(not async_publish),
     )
-
-    # Publish event to Redis Pub/Sub if enabled
-    if redis_client:
-        redis_message = {
-            'channel': channel,
-            'event_type': event_type,
-            'data': data,
-            'skip_user_ids': skip_user_ids
-        }
-        redis_client.publish('events_channel', json.dumps(redis_message))
-    else :
-        # Send to local listeners
-        get_listener_manager().add_to_queues(channel, e)
 
 def get_events(request, limit=100, user=None):
     if user is None:
