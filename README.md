@@ -142,7 +142,7 @@ The `location` block above will pass all requests coming on `/api/` to Pushpin.
 
 ### Sending events between processes and instances
 
-Django EventStream provide the possibility ti use Redis as a message broker to send events between processes and instances. To enable this feature, you need to install the `redis` package:
+Django EventStream provide the possibility to use Redis as a message broker to send events between processes and instances. To enable this feature, you need to install the `redis` package:
 
 ```sh
 pip install redis
