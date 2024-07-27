@@ -51,7 +51,6 @@ class RedisListener(object):
                 channel = event_data['channel']
                 event_type = event_data['event_type']
                 data = event_data['data']
-                skip_user_ids = event_data['skip_user_ids']
 
                 from .event import Event
 
@@ -76,6 +75,8 @@ class ListenerManager(object):
         await self.redis_listener.start()
 
     def add_listener(self, listener):
+        self.lock.acquire()
+        logger.info(f"added listener {id(listener)}")
         if self.redis_listener:
             loop = asyncio.get_event_loop()
             with self.lock:
@@ -110,9 +111,11 @@ class ListenerManager(object):
                     items = []
                     listener.channel_items[channel] = items
                 if len(items) < MAX_PENDING:
+                    logger.info(f"queued event for listener {id(listener)}")
                     items.append(event)
                     wake.append(listener)
                 else:
+                    logger.info(f"could not queue event for listener {id(listener)}")
                     listener.overflow = True
             for listener in wake:
                 listener.wake_threadsafe()
@@ -123,6 +126,7 @@ class ListenerManager(object):
             listeners = self.listeners_by_channel.get(channel, set())
             for listener in listeners:
                 if listener.user_id == user_id:
+                    logger.info(f"setting error on listener {id(listener)}")
                     msg = "Permission denied to channels: %s" % channel
                     listener.error = {
                         "condition": "forbidden",
