@@ -75,7 +75,6 @@ class ListenerManager(object):
         await self.redis_listener.start()
 
     def add_listener(self, listener):
-        # self.lock.acquire()
         logger.info(f"added listener {id(listener)}")
         if self.redis_listener:
             loop = asyncio.get_event_loop()
