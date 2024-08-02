@@ -103,9 +103,29 @@ WSGI mode can work too, but only in combination with a GRIP proxy. See [Multiple
 
 ### Multiple instances and scaling
 
-If you need to run multiple instances of your Django app for high availability or scalability, or need to send events from management commands, then you can introduce a GRIP proxy such as [Pushpin](https://pushpin.org) or [Fastly Fanout](https://developer.fastly.com/learning/concepts/real-time-messaging/fanout/) into your architecture.
+If you need to run multiple instances of your Django app for high availability or scalability, or need to send events from management commands, then you can introduce Redis or a GRIP proxy (such as [Pushpin](https://pushpin.org) or [Fastly Fanout](https://developer.fastly.com/learning/concepts/real-time-messaging/fanout/)) into your architecture.
 
-For example, to use Pushpin with your app, you need to do three things:
+To use Redis with your app, you need to do two things:
+
+1. Install the `redis` module:
+
+```sh
+pip install redis
+```
+
+2. In your `settings.py`, set `EVENTSTREAM_REDIS`:
+
+```py
+EVENTSTREAM_REDIS = {
+    'host': 'redis',
+    'port': 6379,
+    'db': 0,
+}
+```
+
+With this configuration, the `send_event` function will be able to send events from any process or instance of your application.
+
+To use Pushpin with your app, you need to do three things:
 
 1. In your `settings.py`, add the `GripMiddleware` and set `GRIP_URL` to reference Pushpin's private control port:
 
@@ -125,8 +145,10 @@ The middleware is part of [django-grip](https://github.com/fanout/django-grip), 
 2. Configure Pushpin to route requests to your app, by adding something like this to Pushpin's `routes` file (usually `/etc/pushpin/routes`):
 
 ```
-* localhost:8000 # Replace `localhost:8000` with your app's URL and port
+* localhost:8000
 ```
+
+(Replace `localhost:8000` with your app's host/address and port.)
 
 3. Configure your consuming clients to connect to the Pushpin port (by default this is port 7999). Pushpin will forward requests to your app and handle streaming connections on its behalf.
 
@@ -139,26 +161,6 @@ location /api/ {
 ```
 
 The `location` block above will pass all requests coming on `/api/` to Pushpin.
-
-### Sending events between processes and instances
-
-Django EventStream provide the possibility to use Redis as a message broker to send events between processes and instances. To enable this feature, you need to install the `redis` package:
-
-```sh
-pip install redis
-```
-
-Then, you need to configure the `EVENTSTREAM_REDIS` setting in your `settings.py`:
-
-```py
-EVENTSTREAM_REDIS = {
-    'host': 'redis',
-    'port': 6379,
-    'db': 0,
-}
-```
-
-With this configuration, the `send_event` function will be able to send events from any process or instance of your application.
 
 ### Views with Django REST Framework
 
