@@ -24,16 +24,18 @@ class EventPermissionError(Exception):
         self.channels = copy.deepcopy(channels)
 
 
-
 # Configuration de la connexion Redis
 redis_client = None
-if hasattr(settings, 'EVENTSTREAM_REDIS'):
+if hasattr(settings, "EVENTSTREAM_REDIS"):
     try:
         import redis
     except ImportError:
-        raise ImportError("You must install the redis package to use RedisListener for multiprocess event handling. \n pip install redis")
-    
+        raise ImportError(
+            "You must install the redis package to use RedisListener for multiprocess event handling. \n pip install redis"
+        )
+
     redis_client = redis.Redis(**settings.EVENTSTREAM_REDIS)
+
 
 def send_event(
     channel, event_type, data, skip_user_ids=None, async_publish=True, json_encode=True
@@ -58,16 +60,16 @@ def send_event(
         e = Event(channel, event_type, data)
         pub_id = None
         pub_prev_id = None
-        
+
     # Publish event to Redis Pub/Sub if enabled
     if redis_client:
         redis_message = {
-            'channel': channel,
-            'event_type': event_type,
-            'data': data,
+            "channel": channel,
+            "event_type": event_type,
+            "data": data,
         }
-        redis_client.publish('events_channel', json.dumps(redis_message))
-    else :
+        redis_client.publish("events_channel", json.dumps(redis_message))
+    else:
         # Send to local listeners
         get_listener_manager().add_to_queues(channel, e)
 
@@ -81,6 +83,7 @@ def send_event(
         skip_user_ids=skip_user_ids,
         blocking=(not async_publish),
     )
+
 
 def get_events(request, limit=100, user=None):
     if user is None:

@@ -121,8 +121,12 @@ class EventsViewSet(ViewSet):
             "channels": ", ".join(channels),
             "messages_types": ", ".join(messages_types),
         }
-        
-        if self._accepted_format(request, ["text/html"]) and self._api_sse and 'text/event-stream' not in request.GET.get('format', ''):
+
+        if (
+            self._accepted_format(request, ["text/html"])
+            and self._api_sse
+            and "text/event-stream" not in request.GET.get("format", "")
+        ):
             return Response(data, status=status.HTTP_200_OK)
         elif self._accepted_format(request, ["text/event-stream", "*/*"]):
             kwargs = {"channels": channels}

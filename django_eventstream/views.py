@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 MAX_PENDING = 10
 
+
 class Listener(object):
     def __init__(self):
         self.loop = None
@@ -32,25 +33,26 @@ class Listener(object):
         self.loop.call_soon_threadsafe(self.aevent.set)
 
 
-
 class RedisListener(object):
     def __init__(self):
         try:
             from redis.asyncio import Redis
         except ImportError:
-            raise ImportError("You must install the redis package to use RedisListener for multiprocess event handling. \n pip install redis")
+            raise ImportError(
+                "You must install the redis package to use RedisListener for multiprocess event handling. \n pip install redis"
+            )
 
         self.redis_client = Redis(**settings.EVENTSTREAM_REDIS)
         self.pubsub = self.redis_client.pubsub()
 
     async def listen(self):
-        await self.pubsub.subscribe('events_channel')
+        await self.pubsub.subscribe("events_channel")
         async for message in self.pubsub.listen():
-            if message['type'] == 'message':
-                event_data = json.loads(message['data'])
-                channel = event_data['channel']
-                event_type = event_data['event_type']
-                data = event_data['data']
+            if message["type"] == "message":
+                event_data = json.loads(message["data"])
+                channel = event_data["channel"]
+                event_type = event_data["event_type"]
+                data = event_data["data"]
 
                 from .event import Event
 
@@ -62,13 +64,14 @@ class RedisListener(object):
     async def start(self):
         await self.listen()
 
+
 class ListenerManager(object):
     def __init__(self):
         self.lock = threading.Lock()
         self.listeners_by_channel = {}
         self.redis_listener = None
         self.redis_listener_started = False
-        if hasattr(settings, 'EVENTSTREAM_REDIS'):
+        if hasattr(settings, "EVENTSTREAM_REDIS"):
             self.redis_listener = RedisListener()
 
     async def start_redis_listener(self):
@@ -82,7 +85,7 @@ class ListenerManager(object):
                 if not self.redis_listener_started:
                     loop.create_task(self.start_redis_listener())
                     self.redis_listener_started = True
-            
+
         with self.lock:
             for channel in listener.channels:
                 clisteners = self.listeners_by_channel.get(channel)
@@ -135,6 +138,7 @@ class ListenerManager(object):
                     wake.append(listener)
             for listener in wake:
                 listener.wake_threadsafe()
+
 
 listener_manager = ListenerManager()
 
