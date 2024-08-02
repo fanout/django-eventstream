@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
@@ -5,15 +6,14 @@ import asyncio
 import copy
 import logging
 import threading
-import json
 from asgiref.sync import sync_to_async
 from django.http import HttpResponseBadRequest, StreamingHttpResponse
-from .utils import add_default_headers
-from django.conf import settings
-
-logger = logging.getLogger(__name__)
+from ..utils import add_default_headers
 
 MAX_PENDING = 10
+
+
+logger = logging.getLogger(__name__)
 
 
 class Listener(object):
@@ -33,78 +33,39 @@ class Listener(object):
         self.loop.call_soon_threadsafe(self.aevent.set)
 
 
-class RedisListener(object):
-    def __init__(self):
-        try:
-            from redis.asyncio import Redis
-        except ImportError:
-            raise ImportError(
-                "You must install the redis package to use RedisListener for multiprocess event handling. \n pip install redis"
-            )
-
-        self.redis_client = Redis(**settings.EVENTSTREAM_REDIS)
-        self.pubsub = self.redis_client.pubsub()
-
-    async def listen(self):
-        await self.pubsub.subscribe("events_channel")
-        async for message in self.pubsub.listen():
-            if message["type"] == "message":
-                event_data = json.loads(message["data"])
-                channel = event_data["channel"]
-                event_type = event_data["event_type"]
-                data = event_data["data"]
-
-                from .event import Event
-
-                e = Event(channel, event_type, data)
-
-                # Notify local listeners
-                get_listener_manager().add_to_queues(channel, e)
-
-    async def start(self):
-        await self.listen()
-
-
 class ListenerManager(object):
     def __init__(self):
         self.lock = threading.Lock()
         self.listeners_by_channel = {}
-        self.redis_listener = None
-        self.redis_listener_started = False
-        if hasattr(settings, "EVENTSTREAM_REDIS"):
-            self.redis_listener = RedisListener()
-
-    async def start_redis_listener(self):
-        await self.redis_listener.start()
 
     def add_listener(self, listener):
+        self.lock.acquire()
         logger.info(f"added listener {id(listener)}")
-        if self.redis_listener:
-            loop = asyncio.get_event_loop()
-            with self.lock:
-                if not self.redis_listener_started:
-                    loop.create_task(self.start_redis_listener())
-                    self.redis_listener_started = True
-
-        with self.lock:
+        try:
             for channel in listener.channels:
                 clisteners = self.listeners_by_channel.get(channel)
                 if clisteners is None:
                     clisteners = set()
                     self.listeners_by_channel[channel] = clisteners
                 clisteners.add(listener)
+        finally:
+            self.lock.release()
 
     def remove_listener(self, listener):
-        with self.lock:
+        self.lock.acquire()
+        try:
             for channel in listener.channels:
                 clisteners = self.listeners_by_channel.get(channel)
                 clisteners.remove(listener)
                 if len(clisteners) == 0:
                     del self.listeners_by_channel[channel]
             logger.info(f"removed listener {id(listener)}")
+        finally:
+            self.lock.release()
 
     def add_to_queues(self, channel, event):
-        with self.lock:
+        self.lock.acquire()
+        try:
             wake = []
             listeners = self.listeners_by_channel.get(channel, set())
             for listener in listeners:
@@ -121,9 +82,12 @@ class ListenerManager(object):
                     listener.overflow = True
             for listener in wake:
                 listener.wake_threadsafe()
+        finally:
+            self.lock.release()
 
     def kick(self, user_id, channel):
-        with self.lock:
+        self.lock.acquire()
+        try:
             wake = []
             listeners = self.listeners_by_channel.get(channel, set())
             for listener in listeners:
@@ -138,6 +102,8 @@ class ListenerManager(object):
                     wake.append(listener)
             for listener in wake:
                 listener.wake_threadsafe()
+        finally:
+            self.lock.release()
 
 
 listener_manager = ListenerManager()
@@ -148,8 +114,8 @@ def get_listener_manager():
 
 
 async def stream(event_request, listener):
-    from .eventstream import get_events, EventPermissionError
-    from .utils import sse_encode_event, sse_encode_error, make_id
+    from ..eventstream import get_events, EventPermissionError
+    from ..utils import sse_encode_event, sse_encode_error, make_id
 
     get_events = sync_to_async(get_events)
 
@@ -283,9 +249,9 @@ async def stream(event_request, listener):
 
 
 def events(request, **kwargs):
-    from .eventrequest import EventRequest
-    from .eventstream import EventPermissionError, get_events
-    from .utils import sse_error_response
+    from ..eventrequest import EventRequest
+    from ..eventstream import EventPermissionError, get_events
+    from ..utils import sse_error_response
 
     try:
         event_request = EventRequest(request, view_kwargs=kwargs)

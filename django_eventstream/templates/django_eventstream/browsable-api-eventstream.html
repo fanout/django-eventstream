@@ -186,7 +186,7 @@
 {% if channels %}<b>Listen channels:</b> <span class="lit">{{ channels }}</span>{% endif %}
 <b>Listen messages types:</b> <span class="lit">{{ messages_types }}</span>
 <hr><div class="action-container"></span>{% if channels and not error %}<button id="clearMessages" class="btn btn-danger"><i class="fas fa-trash"></i> Clear Messages</button><div class="custom-panel-body"><div class="custom-checkbox custom-checkbox-switch custom-switch-primary"><label><input type="checkbox" id="keepAliveCheckbox" name="keepAliveCheckbox" checked /><span class="custom-slider"></span>Keep-Alive event</label></div></div></div>
-<div id="sse-stream"></div>{% endif %}{% if error %} <div class="error-channels"><b>Error: </b>{{ error }}{% endif %}</div></pre>
+<div id="sse-stream"></div>{% endif %}{% if error %} <div class="error-channels text-danger"><b>Error: </b>{{ error }}{% endif %}</div></pre>
               </div>
             </div>
 
@@ -311,9 +311,9 @@
     {% endblock %}
 
     {% if channels and not error %}
-        <script src="{% static 'django_eventstream/json2.js' %}"></script>
-        <script src="{% static 'django_eventstream/reconnecting-eventsource.js' %}"></script>
-        <script src="{% static 'django_eventstream/eventsource.min.js' %}"></script>
+        <script src="{% static 'django_eventstream/js/json2.js' %}"></script>
+        <script src="{% static 'django_eventstream/js/reconnecting-eventsource.js' %}"></script>
+        <script src="{% static 'django_eventstream/js/eventsource.min.js' %}"></script>
         <script>
           var messages_types = "{{ messages_types|safe }}";
         </script>
