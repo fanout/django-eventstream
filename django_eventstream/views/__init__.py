@@ -1,4 +1,4 @@
-from .views import Listener, ListenerManager, get_listener_manager, stream, events
+from .views import Listener, RedisListener, ListenerManager, get_listener_manager, stream, events
 
 # Verify that DRF is installed
 import importlib
