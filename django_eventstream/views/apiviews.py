@@ -1,14 +1,35 @@
 from django.conf import settings
 from django.utils.module_loading import import_string
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.renderers import BrowsableAPIRenderer, JSONRenderer  
-from rest_framework import status
+from rest_framework.metadata import SimpleMetadata
+from rest_framework.settings import api_settings
 from .views import events
-from ..renderers import SSEEventRenderer, BrowsableAPIEventStreamRenderer
+from ..renderers import BrowsableAPIEventStreamRenderer, SSEEventRenderer
+
 
 import logging
 logger = logging.getLogger(__name__)
+
+class EventsMetadata(SimpleMetadata):
+    """
+    A metadata class to provide information about the EventsAPIView class.
+    It's only purpose is to provide correct information about the actions that can be performed in the events view.
+    """
+    def determine_metadata(self, request, view):
+        metadata = {
+            "name": view.get_view_name(),
+            "description": view.get_view_description(),
+            "renders": [renderer.media_type for renderer in view.sse_renderer_classes],
+            "listen_channels": view.channels,
+            "listen_messages_types": view.messages_types,
+        }
+        if hasattr(view, 'get_serializer'):
+            actions = self.determine_actions(request, view)
+            if actions:
+                metadata['actions'] = actions
+        return metadata
 
 class EventsAPIView(APIView):
     """
@@ -17,16 +38,16 @@ class EventsAPIView(APIView):
     By default, this view will not stream any events, because you must configure the channels you want to see the events from.
     To configure the channels, you can do it in three ways:
         - By setting the channels attribute in the class definition.
-        - By setting the channels query parameter in the request.
         - By setting the channel in the URL.
-    Those three ways are mutually exclusive, so you can only use one of them.
+    Those two ways are mutually exclusive, so you can only use one of them.
 
-    If you want to see a specific type of messages and not the default "message" type, you can set the messages_types attribute in the class definition.
+    If you want to see a specific type of messages and not the default "message" type, you can also set the messages_types attribute in the class definition.
     That's the only way provided to set the messages types.
     """
 
     http_method_names = ["get", "options", "head"]
     parser_classes = []
+    metadata_class = EventsMetadata
 
     def __init__(self, channels: list = None, messages_types: list = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -34,14 +55,18 @@ class EventsAPIView(APIView):
         self.messages_types = messages_types if messages_types is not None else []
 
     @property
+    def sse_renderer_classes(self):
+        if hasattr(settings, "EVENTSTREAM_RENDERER"):
+            sse_renderer_classes = [import_string(renderer) for renderer in settings.EVENTSTREAM_RENDERER]
+        else:
+            sse_renderer_classes = [SSEEventRenderer, BrowsableAPIEventStreamRenderer]
+        return sse_renderer_classes
+    
+    @property
     def renderer_classes(self):
         if self.request.method == "OPTIONS":
-            return [BrowsableAPIRenderer, JSONRenderer]
-        if hasattr(settings, "EVENTSTREAM_RENDERER"):
-            renderer_classes = [import_string(renderer) for renderer in settings.EVENTSTREAM_RENDERER]
-        else:
-            renderer_classes = [SSEEventRenderer, BrowsableAPIEventStreamRenderer]
-        return renderer_classes
+            return api_settings.DEFAULT_RENDERER_CLASSES
+        return self.sse_renderer_classes
 
     @property   
     def _api_sse(self):
@@ -76,23 +101,6 @@ class EventsAPIView(APIView):
             )
 
         return self._stream_or_respond(self.channels, request)
-    
-    def options(self, request, *args, **kwargs):
-        if self.metadata_class is None:
-            return self.http_method_not_allowed(request, *args, **kwargs)
-        data = self.metadata_class().determine_metadata(request, self)
-        logger.error(f"OPTIONS {data}")
-
-        default_renderer_classes = [BrowsableAPIRenderer]
-        response = Response(data, status=status.HTTP_200_OK)
-        response.accepted_renderer = default_renderer_classes[0]()
-        logger.error(f"OPTIONS {response.accepted_renderer}")
-        response.accepted_media_type = response.accepted_renderer.media_type
-        response.renderer_context = self.get_renderer_context()
-        logger.error(f"OPTIONS {response.renderer_context}")
-        
-        logger.error(f"OPTIONS {response}")
-        return response
 
     def _accepted_format(self, request, format_list):
         accept_header = request.META.get("HTTP_ACCEPT", "")
@@ -120,13 +128,17 @@ class EventsAPIView(APIView):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-def configure_events_api_view(channels=None, messages_types=None):
+def configure_events_api_view(channels=None, messages_types=None, docstring=None):
     """
     Configure the EventsAPIView class with specific channels and message types.
     """
 
     class ConfiguredEventsAPIView(EventsAPIView):
+        __doc__ = docstring or  """
+        A subclass of the EventsAPIView class with the channels and messages types configured.
+        """
         def __init__(self, *args, **kwargs):
             super().__init__(channels=channels, messages_types=messages_types, *args, **kwargs)
+            self.__doc__ = """coucou"""
 
     return ConfiguredEventsAPIView
