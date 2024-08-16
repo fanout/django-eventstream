@@ -1,22 +1,31 @@
 from django.conf import settings
 from django.utils.module_loading import import_string
 from rest_framework import status
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.metadata import SimpleMetadata
 from rest_framework.settings import api_settings
 from .views import events
-from ..renderers import BrowsableAPIEventStreamRenderer, SSEEventRenderer
+from django_eventstream.renderers import (
+    BrowsableAPIEventStreamRenderer,
+    SSEEventRenderer,
+)
 
+try:
+    from adrf.views import APIView
+except ImportError:
+    from rest_framework.views import APIView
 
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 class EventsMetadata(SimpleMetadata):
     """
     A metadata class to provide information about the EventsAPIView class.
     It's only purpose is to provide correct information about the actions that can be performed in the events view.
     """
+
     def determine_metadata(self, request, view):
         metadata = {
             "name": view.get_view_name(),
@@ -25,11 +34,12 @@ class EventsMetadata(SimpleMetadata):
             "listen_channels": view.channels,
             "listen_messages_types": view.messages_types,
         }
-        if hasattr(view, 'get_serializer'):
+        if hasattr(view, "get_serializer"):
             actions = self.determine_actions(request, view)
             if actions:
-                metadata['actions'] = actions
+                metadata["actions"] = actions
         return metadata
+
 
 class EventsAPIView(APIView):
     """
@@ -49,7 +59,9 @@ class EventsAPIView(APIView):
     parser_classes = []
     metadata_class = EventsMetadata
 
-    def __init__(self, channels: list = None, messages_types: list = None, *args, **kwargs):
+    def __init__(
+        self, channels: list = None, messages_types: list = None, *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.channels = channels if channels is not None else []
         self.messages_types = messages_types if messages_types is not None else []
@@ -57,18 +69,20 @@ class EventsAPIView(APIView):
     @property
     def sse_renderer_classes(self):
         if hasattr(settings, "EVENTSTREAM_RENDERER"):
-            sse_renderer_classes = [import_string(renderer) for renderer in settings.EVENTSTREAM_RENDERER]
+            sse_renderer_classes = [
+                import_string(renderer) for renderer in settings.EVENTSTREAM_RENDERER
+            ]
         else:
             sse_renderer_classes = [SSEEventRenderer, BrowsableAPIEventStreamRenderer]
         return sse_renderer_classes
-    
+
     @property
     def renderer_classes(self):
         if self.request.method == "OPTIONS":
             return api_settings.DEFAULT_RENDERER_CLASSES
         return self.sse_renderer_classes
 
-    @property   
+    @property
     def _api_sse(self):
         for renderer in self.renderer_classes:
             if renderer.format == "api_sse":
@@ -91,7 +105,9 @@ class EventsAPIView(APIView):
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            self.messages_types = request.query_params.get("messages_types", "").split(",")
+            self.messages_types = request.query_params.get("messages_types", "").split(
+                ","
+            )
 
         if len(self.channels) == 0:
             self.channels = (
@@ -115,7 +131,11 @@ class EventsAPIView(APIView):
             "messages_types": ", ".join(messages_types),
         }
 
-        if self._accepted_format(request, ["text/html"]) and self._api_sse and 'text/event-stream' not in request.GET.get('format', ''):
+        if (
+            self._accepted_format(request, ["text/html"])
+            and self._api_sse
+            and "text/event-stream" not in request.GET.get("format", "")
+        ):
             return Response(data, status=status.HTTP_200_OK)
         elif self._accepted_format(request, ["text/event-stream", "*/*"]):
             kwargs = {"channels": channels}
@@ -128,17 +148,29 @@ class EventsAPIView(APIView):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-def configure_events_api_view(channels=None, messages_types=None, docstring=None):
+
+def configure_events_api_view(
+    channels=None, messages_types=None, docstring=None, class_name=None
+):
     """
     Configure the EventsAPIView class with specific channels and message types.
     """
 
     class ConfiguredEventsAPIView(EventsAPIView):
-        __doc__ = docstring or  """
+        __doc__ = (
+            docstring
+            or """
         A subclass of the EventsAPIView class with the channels and messages types configured.
         """
+        )
+
         def __init__(self, *args, **kwargs):
-            super().__init__(channels=channels, messages_types=messages_types, *args, **kwargs)
+            super().__init__(
+                channels=channels, messages_types=messages_types, *args, **kwargs
+            )
             self.__doc__ = """coucou"""
+
+    if class_name:
+        ConfiguredEventsAPIView.__name__ = class_name
 
     return ConfiguredEventsAPIView

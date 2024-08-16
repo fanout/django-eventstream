@@ -232,5 +232,8 @@ def augment_cors_headers(headers, request):
     if allow_headers:
         headers["Access-Control-Allow-Headers"] = allow_headers
 
+
 def raise_not_found_module_error(*args, **kwargs):
-        raise ModuleNotFoundError("Django Rest Framework is not installed. Please install it to use this feature.")
+    raise ModuleNotFoundError(
+        "Django Rest Framework is not installed. Please install it to use this feature."
+    )

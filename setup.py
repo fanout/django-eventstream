@@ -6,7 +6,7 @@ with open(os.path.join(os.path.dirname(__file__), "README.md")) as f:
 
 setup(
     name="django-eventstream",
-    version="5.3.0",
+    version="6.0.0",
     description="Server-Sent Events for Django",
     long_description=readme,
     long_description_content_type="text/markdown",
@@ -21,6 +21,7 @@ setup(
         "django_eventstream.management",
         "django_eventstream.management.commands",
         "django_eventstream.renderers",
+        "django_eventstream.views",
     ],
     package_data={
         "django_eventstream": [
@@ -35,9 +36,10 @@ setup(
         "gripcontrol>=4.0,<5",
         "django_grip>=3.0,<4",
         "six>=1.10,<2",
+        "sseclient>=0.0.27",
     ],
     extras_require={
-        "drf": ["djangorestframework==3.15.1"],
+        "drf": ["djangorestframework>=3.15.1"],
     },
     tests_require=["Django>=2.0"],
     test_suite="tests.runtests.runtests",

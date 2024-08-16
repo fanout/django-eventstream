@@ -1,0 +1,7 @@
+[run]
+branch = True
+source = django_eventstream
+
+[report]
+omit =
+    */migrations/*

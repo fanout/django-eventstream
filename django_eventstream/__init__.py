@@ -11,3 +11,5 @@ from .eventstream import (
 )
 
 from . import urls
+
+from .event import Event
