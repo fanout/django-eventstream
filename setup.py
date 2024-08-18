@@ -36,7 +36,6 @@ setup(
         "gripcontrol>=4.0,<5",
         "django_grip>=3.0,<4",
         "six>=1.10,<2",
-        "sseclient>=0.0.27",
     ],
     extras_require={
         "drf": ["djangorestframework>=3.15.1"],
