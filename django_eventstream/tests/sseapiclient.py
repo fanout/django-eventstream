@@ -8,5 +8,12 @@ class SSEAPIClient(APIClient, BaseSSEClient):
         BaseSSEClient.__init__(self)
 
     def get(self, *args, **kwargs):
+        if "headers" in kwargs:
+            headers = {**self.default_headers, **kwargs["headers"]}
+        else:
+            headers = self.default_headers
+
+        kwargs["headers"] = headers
+
         self.response = super().get(*args, **kwargs)
         return self.response
