@@ -191,23 +191,21 @@ urlpatterns = [
 ]
 ```
 
-Next, use `DEFAULT_RENDERER_CLASSES` in `settings.py` to manage the renderers you want to use. The `django_eventstream.renderers.SSEEventRenderer` is required to enable SSE functionality. If you also want the Browsable API view, add `django_eventstream.renderers.BrowsableAPIEventStreamRenderer`.
+Next, if you want to customize the rendering by using your own or if you want to delet the Browsable API version here the steps:
 
-Example:
+Firstly some context, the Django EventStream module provide two rederers, the `BrowsableAPIEventStreamRenderer` that is a subclass of the `BrowsableAPIRenderer` which provides a browsable API for the event stream and the `EventStreamRenderer` that is a subclass of the `BaseRenderer` that provides the SSE format for the event stream.
 
-```python
-REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
-        'django_eventstream.renderers.SSEEventRenderer',
-        'django_eventstream.renderers.BrowsableAPIEventStreamRenderer'
-         # Add other renderers as needed
-    ]
+To remove the Browsable APIor to modifi the used renderer you need to set the `EVENTSTREAM_RENDERER` in the settings.py file. Same as you can do with the Django REST Framework renderers.
+
+Here is an example of the `settings.py` file:
+```py
+EVENTSTREAM_RENDERER = {
+    'django_eventstream.renderers.SSEEventRenderer',
+    'django_eventstream.renderers.BrowsableAPIEventStreamRenderer',
 }
 ```
 
-Be careful to not add the eventstream renderers before the `JSONRenderer` and `BrowsableAPIRenderer` (or other Renderer), otherwise the API will probably not work as expected.
+Note that the browsable API renderer is only available if an SSE renderer is avaible to to properly stream the data.
 
 ## Event storage
 
@@ -234,8 +232,8 @@ To enable storage selectively by channel, implement a channel manager and overri
 Include client libraries on the frontend:
 
 ```html
-<script src="{% static 'django_eventstream/eventsource.min.js' %}"></script>
-<script src="{% static 'django_eventstream/reconnecting-eventsource.js' %}"></script>
+<script src="{% static 'django_eventstream/js/eventsource.min.js' %}"></script>
+<script src="{% static 'django_eventstream/js/reconnecting-eventsource.js' %}"></script>
 ```
 
 Listen for data:

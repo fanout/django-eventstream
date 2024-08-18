@@ -1,15 +1,21 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
+from django.test import TestCase, override_settings
+from django_eventstream.storage import (
+    DjangoModelStorage,
+    EventDoesNotExist,
+    RedisStorage,
+)
 from django.test import TestCase
-from django_eventstream.storage import DjangoModelStorage, EventDoesNotExist
+from django_eventstream.storage import EventDoesNotExist
 
 
-class DjangoStorageTest(TestCase):
+class BaseStorageTest(TestCase):
+    __test__ = False
+    storage_class = None  # A surcharger dans les sous-classes
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.storage = DjangoModelStorage()
+        cls.storage = cls.storage_class()
 
     def test_empty_channel_id(self):
         self.assertEqual(self.storage.get_current_id("empty"), 0)
@@ -41,3 +47,20 @@ class DjangoStorageTest(TestCase):
             self.storage.get_events(channel, 2)
 
         self.assertEqual(cm.exception.current_id, 1)
+
+
+class DjangoModelStorageTest(BaseStorageTest):
+    __test__ = True
+    storage_class = DjangoModelStorage
+
+
+# @override_settings(
+#     EVENTSTREAM_STORAGE_CONNECTION={
+#         "host": "localhost",
+#         "port": 6379,
+#         "db": 0,
+#     }
+# )
+# class RedisStorageTest(BaseStorageTest):
+#     __test__ = True
+#     storage_class = RedisStorage

@@ -42,15 +42,7 @@ INSTALLED_APPS = [
     "chat",
 ]
 
-# Be careful do not place the sse renderer or the browsable api event stream renderer in before other renderers if you use them.
-REST_FRAMEWORK = {
-    "DEFAULT_RENDERER_CLASSES": [
-        "rest_framework.renderers.JSONRenderer",
-        "rest_framework.renderers.BrowsableAPIRenderer",
-        "django_eventstream.renderers.SSEEventRenderer",
-        "django_eventstream.renderers.BrowsableAPIEventStreamRenderer",
-    ]
-}
+
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -140,3 +132,8 @@ EVENTSTREAM_STORAGE_CLASS = "django_eventstream.storage.DjangoModelStorage"
 CORS_ALLOW_ALL_ORIGINS = True
 
 EVENTSTREAM_ALLOW_ORIGIN = "*"
+
+EVENTSTREAM_RENDERER = {
+    'django_eventstream.renderers.SSEEventRenderer',
+    'django_eventstream.renderers.BrowsableAPIEventStreamRenderer',
+}

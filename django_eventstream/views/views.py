@@ -8,7 +8,7 @@ import threading
 import json
 from asgiref.sync import sync_to_async
 from django.http import HttpResponseBadRequest, StreamingHttpResponse
-from .utils import add_default_headers
+from django_eventstream.utils import add_default_headers
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ class RedisListener(object):
                 event_type = event_data["event_type"]
                 data = event_data["data"]
 
-                from .event import Event
+                from django_eventstream.event import Event
 
                 e = Event(channel, event_type, data)
 
@@ -148,8 +148,8 @@ def get_listener_manager():
 
 
 async def stream(event_request, listener):
-    from .eventstream import get_events, EventPermissionError
-    from .utils import sse_encode_event, sse_encode_error, make_id
+    from django_eventstream.eventstream import get_events, EventPermissionError
+    from django_eventstream.utils import sse_encode_event, sse_encode_error, make_id
 
     get_events = sync_to_async(get_events)
 
@@ -283,9 +283,9 @@ async def stream(event_request, listener):
 
 
 def events(request, **kwargs):
-    from .eventrequest import EventRequest
-    from .eventstream import EventPermissionError, get_events
-    from .utils import sse_error_response
+    from django_eventstream.eventrequest import EventRequest
+    from django_eventstream.eventstream import EventPermissionError, get_events
+    from django_eventstream.utils import sse_error_response
 
     try:
         event_request = EventRequest(request, view_kwargs=kwargs)
