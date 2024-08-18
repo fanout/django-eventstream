@@ -1,6 +1,4 @@
 import django
-import os
-from pathlib import Path
 from django.core.management.commands.makemigrations import Command as MakeMigrations
 from django.core.management.commands.migrate import Command as Migrate
 from django.core.management.commands.flush import Command as Flush

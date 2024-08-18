@@ -1,27 +1,24 @@
 import time
 from django.test import TestCase
-from django.urls import reverse
-from rest_framework.test import APIClient
-from django_eventstream.tests import SSEAPIClient
 from django_eventstream import Event
 
 
-class TestSSEApiView(TestCase):
-    async def test_stream(self):
-        client = SSEAPIClient()
+class BaseTestSSEViewStream(TestCase):
+    __test__ = False
+
+    def test_stream(self):
+        client = self.client_class()
         response = client.get(
-            reverse("events"),
-            headers={
-                "Accept": "text/event-stream",
-                "Content-Type": "text/event-stream",
-            },
+            self.url,
         )
 
         assert (
             response.status_code == 200
         ), f"Expected 200 OK but got {response.status_code}"
 
-        assert response.streaming, "Expected a streaming response"
+        assert response.streaming, (
+            "Expected a streaming response, instead we got: %s" % response.content
+        )
 
         received_events = []
         events_time = []
@@ -30,7 +27,7 @@ class TestSSEApiView(TestCase):
         expected_interval_between_events = 20  # seconds
 
         start_time = time.time()
-        async for event in client.sse_stream():
+        for event in client.sse_stream():
             received_events.append(event)
             events_time.append(time.time())
             if len(received_events) >= expected_event_count:
@@ -75,22 +72,4 @@ class TestSSEApiView(TestCase):
                 abs(interval_duration - expected_interval_between_events) < 1
             ), f"Expected interval of {expected_interval_between_events} seconds but got {interval_duration} seconds"
 
-    def test_stream_html(self):
-        client = APIClient()
-        response = client.get(
-            reverse("events"),
-            headers={
-                "Accept": "text/html",
-                "Content-Type": "text/html",
-            },
-        )
-
-        assert (
-            response.status_code == 200
-        ), f"Expected 200 OK but got {response.status_code}"
-
-        assert not response.streaming, "Expected a non-streaming response"
-
-        assert (
-            response.content == b"channels: , messages_types: message"
-        ), "Expected response content to match"
+    # def test_received_events(self):

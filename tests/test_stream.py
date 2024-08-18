@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import pytest
 import asyncio
 
 from asgiref.sync import sync_to_async
@@ -25,6 +26,7 @@ class DjangoStreamTest(IsolatedAsyncioTestCase):
         cls.storage = DjangoModelStorage()
         pass
 
+    @pytest.mark.django_db
     @patch("django_eventstream.eventstream.get_storage")
     async def test_stream_with_last_event_id_does_not_loop_forever(
         self, mock_get_storage

@@ -84,6 +84,8 @@ def send_event(
         blocking=(not async_publish),
     )
 
+    return e
+
 
 def get_events(request, limit=100, user=None):
     if user is None:

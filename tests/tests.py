@@ -439,7 +439,7 @@ class URLListTest(TestCase):
 
         list_urls(url_patterns)
 
-        url = reverse("events")
+        url = reverse("apiview-events")
         print(f"URL for 'events' name: {url}")
 
 
@@ -509,8 +509,8 @@ class TestSSEAPIClient(APITestCase):
         #         break
 
         # Test asynchrone pour recevoir les événements
-        # url = self.live_server_url + reverse("events")
-        url = reverse("events")
+        # url = self.live_server_url + reverse("apiview-events")
+        url = reverse("apiview-events")
         print("url: ", url)
         # health_url = self.live_server_url + reverse("health")
         health_url = reverse("health")
@@ -538,7 +538,9 @@ class TestSSEAPIClient(APITestCase):
             response.status_code == 200
         ), f"Expected 200 OK but got {response.status_code}"
 
-        assert response.streaming, "Expected a streaming response"
+        assert response.streaming, (
+            "Expected a streaming response, instead we got: %s" % response.content
+        )
 
         # async for chunk in response.streaming_content:
         #     print("chunk: ", chunk.decode("utf-8"))
@@ -550,7 +552,7 @@ class TestSSEAPIClient(APITestCase):
         # ----------------------------
 
         # rf = AsyncRequestFactory()
-        # get_request = rf.get(reverse("events"), content_type="text/event-stream")
+        # get_request = rf.get(reverse("apiview-events"), content_type="text/event-stream")
 
         # view = configure_events_api_view(
         #     channels=["enzo"],
