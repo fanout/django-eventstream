@@ -67,6 +67,7 @@ def send_event(
             "channel": channel,
             "event_type": event_type,
             "data": data,
+            "pub_id": pub_id,
         }
         redis_client.publish("events_channel", json.dumps(redis_message))
     else:
