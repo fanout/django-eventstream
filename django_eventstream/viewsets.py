@@ -115,7 +115,7 @@ class EventsViewSet(ViewSet):
         return any(fmt in accept_header or fmt in query_format for fmt in format_list)
 
     def _stream_or_respond(self, channels, django_request):
-        request = django_request._request
+        request = django_request._request if hasattr(django_request, "_request") else django_request
         messages_types = self.messages_types if self.messages_types else ["message"]
         data = {
             "channels": ", ".join(channels),
