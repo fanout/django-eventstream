@@ -12,7 +12,10 @@ restoreKeepAliveStatus();
 
 function startStream() {
     var uri = window.location.href;
-    var cleanUri = uri.split('?')[0];
+    var baseUri = uri.split('?')[0];
+    var queryString = uri.split('?')[1] || '';
+    var channel = new URLSearchParams(queryString).get('channels');
+    var cleanUri = channel ? `${baseUri}?channels=${channel}` : baseUri;
     var es = new ReconnectingEventSource(cleanUri);
     var element = document.getElementById('sse-stream');
     var clearButton = document.getElementById('clearMessages');
