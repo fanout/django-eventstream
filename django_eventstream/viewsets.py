@@ -107,15 +107,14 @@ class EventsViewSet(ViewSet):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        return self._stream_or_respond([channel], request._request)
+        return self._stream_or_respond([channel], request)
 
     def _accepted_format(self, request, format_list):
         accept_header = request.META.get("HTTP_ACCEPT", "")
         query_format = request.GET.get("format", "")
         return any(fmt in accept_header or fmt in query_format for fmt in format_list)
 
-    def _stream_or_respond(self, channels, django_request):
-        request = django_request._request
+    def _stream_or_respond(self, channels, request):
         messages_types = self.messages_types if self.messages_types else ["message"]
         data = {
             "channels": ", ".join(channels),
