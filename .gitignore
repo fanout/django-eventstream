@@ -7,3 +7,6 @@ db.sqlite3
 db.sqlite3-journal
 build/
 dist/
+htmlcov/
+*/.coverage
+.pytest_cache/
