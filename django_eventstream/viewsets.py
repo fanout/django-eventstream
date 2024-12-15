@@ -1,3 +1,4 @@
+import logging
 from django.conf import settings
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
@@ -10,6 +11,7 @@ from django_eventstream.renderers import (
     BrowsableAPIEventStreamRenderer,
 )
 
+logger = logging.getLogger(__name__)
 
 class EventsViewSet(ViewSet):
     """
@@ -22,50 +24,64 @@ class EventsViewSet(ViewSet):
         - By setting the channel in the URL.
     Those three ways are mutually exclusive, so you can only use one of them.
 
-    If you want to see a specific type of messages and not the default "message" type, you can set the messages_types attribute in the class definition.
-    That's the only way provided to set the messages types.
+    If you want to see a specific type of messages and not the default "message" type, you can set the messages_types attribute in the class definition or by using the configure_events_view_set method.
+    That's the only ways provided to set the messages types.
     """
 
     http_method_names = ["get"]
     renderer_classes = (BrowsableAPIEventStreamRenderer, SSEEventRenderer)
 
-    no_api_sse_renderer = False
+    api_sse_renderer_available = True
 
-    def __init__(
-        self, channels: list = None, messages_types: list = None, *args, **kwargs
-    ):
+    def __init__(self, channels: list = None, messages_types: list = None, *args, **kwargs):
         super().__init__()
         self.channels = channels if channels is not None else []
         self.messages_types = messages_types if messages_types is not None else []
-        self._api_sse = False
+        self._api_sse = True
 
     def get_renderers(self):
-        if hasattr(settings, "REST_FRAMEWORK"):
-            api_settings = APISettings(
-                user_settings=settings.REST_FRAMEWORK,
-                defaults=None,
-                import_strings=None,
-            )
-            default_renderers = list(api_settings.DEFAULT_RENDERER_CLASSES)
-
-            sse_renderers = []
-            api_sse_renderers = []
-
-            for renderer_class in default_renderers:
-                renderer_instance = renderer_class()
-                if renderer_instance.format == "api_sse":
-                    api_sse_renderers.append(renderer_class)
-                    self._api_sse = True
-                if renderer_instance.format == "text/event-stream":
-                    sse_renderers.append(renderer_class)
-
-            if len(api_sse_renderers) == 0:
-                self.no_api_sse_renderer = True
+        try:
+            if hasattr(settings, "REST_FRAMEWORK") and "DEFAULT_RENDERER_CLASSES" in settings.REST_FRAMEWORK:
+                api_settings = APISettings(
+                    user_settings=settings.REST_FRAMEWORK,
+                    defaults=None,
+                    import_strings=None,
+                )
+                default_renderers = list(api_settings.DEFAULT_RENDERER_CLASSES)
             else:
-                self.no_api_sse_renderer = False
+                default_renderers = []
 
-            self.renderer_classes = api_sse_renderers + sse_renderers
+            if default_renderers:
+                
+                sse_renderers = []
+                api_sse_renderers = []
+                self._api_sse = False
+            
+                for renderer_class in default_renderers:
+                    try:
+                        renderer_instance = renderer_class()
+                        if renderer_instance.format == "api_sse":
+                            api_sse_renderers.append(renderer_class)
+                            self._api_sse = True
+                        if renderer_instance.format == "text/event-stream":
+                            sse_renderers.append(renderer_class)
+                    except Exception as e:
+                        logger.error(f"Failed to initialize renderer {renderer_class}: {e}")
 
+                if not api_sse_renderers:
+                    self.api_sse_renderer_available = False
+                else:
+                    self.api_sse_renderer_available = True
+
+                self.renderer_classes = api_sse_renderers + sse_renderers
+        except Exception as e:
+            logger.error(f"Error in get_renderers: {e}")
+            self.renderer_classes = []
+        logger.info(f"renderer_classes: {self.renderer_classes}")
+        
+        if not self.renderer_classes:
+            logger.warning(f"No renderers are available for the viewset named {self.__class__.__name__} ")
+        
         return super().get_renderers()
 
     def list(self, request):
