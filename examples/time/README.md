@@ -20,4 +20,4 @@ Run:
 python manage.py runserver
 ```
 
-At a shell, run `curl http://localhost:8000/events/`
+Open browser to http://localhost:8000/

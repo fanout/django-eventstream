@@ -3,5 +3,4 @@ dj-database-url==2.1.0
 Django==5.0.2
 django-dotenv==1.4.2
 django-grip==3.5.0
-redis==5.2.0
 whitenoise==6.6.0
