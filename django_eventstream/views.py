@@ -140,11 +140,12 @@ class ListenerManager(object):
                 listener.wake_threadsafe()
 
 
-listener_manager = ListenerManager()
-
-
 def get_listener_manager():
-    return listener_manager
+    from .utils import get_class_from_setting
+    return get_class_from_setting(
+            "EVENTSTREAM_LISTENERMANAGER_CLASS",
+            "django_eventstream.views.ListenerManager",
+        )
 
 
 async def stream(event_request, listener):
