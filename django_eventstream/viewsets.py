@@ -13,6 +13,7 @@ from django_eventstream.renderers import (
 
 logger = logging.getLogger(__name__)
 
+
 class EventsViewSet(ViewSet):
     """
     A viewset to stream events to the client. Here you will be able to see the events in real time.
@@ -33,7 +34,9 @@ class EventsViewSet(ViewSet):
 
     api_sse_renderer_available = True
 
-    def __init__(self, channels: list = None, messages_types: list = None, *args, **kwargs):
+    def __init__(
+        self, channels: list = None, messages_types: list = None, *args, **kwargs
+    ):
         super().__init__()
         self.channels = channels if channels is not None else []
         self.messages_types = messages_types if messages_types is not None else []
@@ -41,7 +44,10 @@ class EventsViewSet(ViewSet):
 
     def get_renderers(self):
         try:
-            if hasattr(settings, "REST_FRAMEWORK") and "DEFAULT_RENDERER_CLASSES" in settings.REST_FRAMEWORK:
+            if (
+                hasattr(settings, "REST_FRAMEWORK")
+                and "DEFAULT_RENDERER_CLASSES" in settings.REST_FRAMEWORK
+            ):
                 api_settings = APISettings(
                     user_settings=settings.REST_FRAMEWORK,
                     defaults=None,
@@ -52,11 +58,11 @@ class EventsViewSet(ViewSet):
                 default_renderers = []
 
             if default_renderers:
-                
+
                 sse_renderers = []
                 api_sse_renderers = []
                 self._api_sse = False
-            
+
                 for renderer_class in default_renderers:
                     try:
                         renderer_instance = renderer_class()
@@ -66,7 +72,9 @@ class EventsViewSet(ViewSet):
                         if renderer_instance.format == "text/event-stream":
                             sse_renderers.append(renderer_class)
                     except Exception as e:
-                        logger.error(f"Failed to initialize renderer {renderer_class}: {e}")
+                        logger.error(
+                            f"Failed to initialize renderer {renderer_class}: {e}"
+                        )
 
                 if not api_sse_renderers:
                     self.api_sse_renderer_available = False
@@ -78,10 +86,12 @@ class EventsViewSet(ViewSet):
             logger.error(f"Error in get_renderers: {e}")
             self.renderer_classes = []
         logger.info(f"renderer_classes: {self.renderer_classes}")
-        
+
         if not self.renderer_classes:
-            logger.warning(f"No renderers are available for the viewset named {self.__class__.__name__} ")
-        
+            logger.warning(
+                f"No renderers are available for the viewset named {self.__class__.__name__} "
+            )
+
         return super().get_renderers()
 
     def list(self, request):

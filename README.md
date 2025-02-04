@@ -191,7 +191,7 @@ urlpatterns = [
 ]
 ```
 
-Next, use `DEFAULT_RENDERER_CLASSES` in `settings.py` to manage the renderers you want to use. The `django_eventstream.renderers.SSEEventRenderer` is required to enable SSE functionality. If you also want the Browsable API view, add `django_eventstream.renderers.BrowsableAPIEventStreamRenderer`.  By default they are define in the EventsViewSet class.
+Next, use `DEFAULT_RENDERER_CLASSES` in `settings.py` to manage the renderers you want to use. The `django_eventstream.renderers.SSEEventRenderer` is required to enable SSE functionality. If you also want the Browsable API view, add `django_eventstream.renderers.BrowsableAPIEventStreamRenderer`. By default they are defined in the `EventsViewSet` class.
 
 Example:
 
