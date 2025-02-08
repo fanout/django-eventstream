@@ -53,10 +53,11 @@ class RedisListener(object):
                 channel = event_data["channel"]
                 event_type = event_data["event_type"]
                 data = event_data["data"]
+                pub_id = event_data["pub_id"]
 
                 from .event import Event
 
-                e = Event(channel, event_type, data)
+                e = Event(channel, event_type, data, id=pub_id)
 
                 # Notify local listeners
                 get_listener_manager().add_to_queues(channel, e)
