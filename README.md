@@ -229,6 +229,14 @@ That's all you need to do. When storage is enabled, events are written to the da
 
 To enable storage selectively by channel, implement a channel manager and override `is_channel_reliable`.
 
+## Listener manager
+
+To customize listener management (add, remove, kick, queue event), set a listener manager class in `settings.py`:
+
+```py
+EVENTSTREAM_LISTENERMANAGER_CLASS = 'django_eventstream.views.ListenerManager'
+```
+
 ## Receiving in the browser
 
 Include client libraries on the frontend:
