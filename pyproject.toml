@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "django-eventstream"
+version = "5.3.2"
+description = "Server-Sent Events for Django"
+readme = "README.md"
+authors = [
+    { name = "Justin Karneges", email = "justin@fanout.io" }
+]
+license = { text = "MIT" }
+requires-python = ">=3.10"
+urls = { homepage = "https://github.com/fanout/django-eventstream" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Topic :: Utilities",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Framework :: Django",
+]
+
+dependencies = [
+    "Django>=5",
+    "PyJWT>=1.5,<3",
+    "gripcontrol>=4.0,<5",
+    "django_grip>=3.0,<4",
+    "six>=1.10,<2",
+]
+
+[project.optional-dependencies]
+drf = ["djangorestframework>=3.15.1"]
+
+[tool.setuptools.packages.find]
+include = [
+    "django_eventstream",
+    "django_eventstream.*"
+]
+
+[tool.setuptools.package-data]
+"django_eventstream" = [
+    "static/django_eventstream/*",
+    "static/django_eventstream/**/*",
+    "templates/django_eventstream/*"
+]
+
+[tool.setuptools]
+zip-safe = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
