@@ -85,7 +85,7 @@ class EventsViewSet(ViewSet):
         except Exception as e:
             logger.error(f"Error in get_renderers: {e}")
             self.renderer_classes = []
-        logger.info(f"renderer_classes: {self.renderer_classes}")
+        logger.debug(f"renderer_classes: {self.renderer_classes}")
 
         if not self.renderer_classes:
             logger.warning(
