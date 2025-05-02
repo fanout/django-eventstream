@@ -102,7 +102,7 @@ class ListenerManager(object):
                 clisteners.remove(listener)
                 if len(clisteners) == 0:
                     del self.listeners_by_channel[channel]
-            logger.info(f"removed listener {id(listener)}")
+            logger.debug(f"removed listener {id(listener)}")
 
     def add_to_queues(self, channel, event):
         with self.lock:
@@ -114,11 +114,11 @@ class ListenerManager(object):
                     items = []
                     listener.channel_items[channel] = items
                 if len(items) < MAX_PENDING:
-                    logger.info(f"queued event for listener {id(listener)}")
+                    logger.debug(f"queued event for listener {id(listener)}")
                     items.append(event)
                     wake.append(listener)
                 else:
-                    logger.info(f"could not queue event for listener {id(listener)}")
+                    logger.debug(f"could not queue event for listener {id(listener)}")
                     listener.overflow = True
             for listener in wake:
                 listener.wake_threadsafe()
