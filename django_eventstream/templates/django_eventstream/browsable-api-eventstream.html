@@ -182,7 +182,7 @@
 
               <div class="response-info" aria-label="{% trans "response info" %}">
                 <pre class="prettyprint"><span class="meta nocode"><b>HTTP {{ response.status_code }} {{ response.status_text }}</b>{% for key, val in response_headers|items %}
-<b>{{ key }}:</b> <span class="lit">{{ val|break_long_headers|urlize }}</span>{% endfor %}
+<b>{{ key }}:</b> <span class="lit">{{ val|urlize }}</span>{% endfor %}
 {% if channels %}<b>Listen channels:</b> <span class="lit">{{ channels }}</span>{% endif %}
 <b>Listen messages types:</b> <span class="lit">{{ messages_types }}</span>
 <hr><div class="action-container"></span>{% if channels and not error %}<button id="clearMessages" class="btn btn-danger"><i class="fas fa-trash"></i> Clear Messages</button><div class="custom-panel-body"><div class="custom-checkbox custom-checkbox-switch custom-switch-primary"><label><input type="checkbox" id="keepAliveCheckbox" name="keepAliveCheckbox" checked /><span class="custom-slider"></span>Keep-Alive event</label></div></div></div>
