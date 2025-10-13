@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-eventstream"
-version = "5.3.2"
+version = "5.3.3"
 description = "Server-Sent Events for Django"
 readme = "README.md"
 authors = [
@@ -31,7 +31,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-drf = ["djangorestframework>=3.15.1"]
+drf = ["djangorestframework>=3.16.1"]
 
 [tool.setuptools.packages.find]
 include = [
