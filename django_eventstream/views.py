@@ -207,14 +207,16 @@ async def stream(event_request, listener):
             # FIXME: reconcile without re-reading from db
 
             lm.lock.acquire()
-            conflict = False
-            if len(listener.channel_items) > 0:
-                # items were queued while reading from the db. toss them and
-                #   read from db again
-                listener.aevent.clear()
-                listener.channel_items = {}
-                conflict = True
-            lm.lock.release()
+            try:
+                conflict = False
+                if len(listener.channel_items) > 0:
+                    # items were queued while reading from the db. toss them and
+                    #   read from db again
+                    listener.aevent.clear()
+                    listener.channel_items = {}
+                    conflict = True
+            finally:
+                lm.lock.release()
 
             if conflict:
                 continue
@@ -232,16 +234,16 @@ async def stream(event_request, listener):
                         yield body
 
                     lm.lock.acquire()
+                    try:
+                        channel_items = listener.channel_items
+                        overflow = listener.overflow
+                        error_data = listener.error
 
-                    channel_items = listener.channel_items
-                    overflow = listener.overflow
-                    error_data = listener.error
-
-                    listener.aevent.clear()
-                    listener.channel_items = {}
-                    listener.overflow = False
-
-                    lm.lock.release()
+                        listener.aevent.clear()
+                        listener.channel_items = {}
+                        listener.overflow = False
+                    finally:
+                        lm.lock.release()
 
                     body = ""
                     for channel, items in channel_items.items():
