@@ -323,3 +323,17 @@ EVENTSTREAM_ALLOW_HEADERS = 'Authorization'
 Note that `EVENTSTREAM_ALLOW_HEADERS` only takes a single string value and does not process a list.
 
 If more advanced CORS capabilities are needed, see [django-cors-headers](https://github.com/adamchainz/django-cors-headers).
+
+## Performance tuning
+
+### Max pending events per listener
+
+The `EVENTSTREAM_MAX_PENDING` setting controls the maximum number of events that can be queued per listener before backpressure is applied. The default value is `10`.
+
+If you have many concurrent clients and are experiencing performance issues, you can adjust this value:
+
+```py
+EVENTSTREAM_MAX_PENDING = 20  # Increase buffer size for high-concurrency scenarios
+```
+
+A higher value allows more events to be buffered per client before they need to catch up, but uses more memory. A lower value reduces memory usage but may cause more frequent reconnections for slow clients.

@@ -13,7 +13,8 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-MAX_PENDING = 10
+# Default max pending events per listener. Can be overridden via settings.EVENTSTREAM_MAX_PENDING
+MAX_PENDING = getattr(settings, "EVENTSTREAM_MAX_PENDING", 10)
 
 
 class Listener(object):
@@ -105,8 +106,9 @@ class ListenerManager(object):
             logger.debug(f"removed listener {id(listener)}")
 
     def add_to_queues(self, channel, event):
+        # Collect listeners to wake outside the lock to minimize lock hold time
+        wake = []
         with self.lock:
-            wake = []
             listeners = self.listeners_by_channel.get(channel, set())
             for listener in listeners:
                 items = listener.channel_items.get(channel)
@@ -120,12 +122,15 @@ class ListenerManager(object):
                 else:
                     logger.debug(f"could not queue event for listener {id(listener)}")
                     listener.overflow = True
-            for listener in wake:
-                listener.wake_threadsafe()
+        
+        # Wake listeners outside the lock to reduce contention
+        for listener in wake:
+            listener.wake_threadsafe()
 
     def kick(self, user_id, channel):
+        # Collect listeners to wake outside the lock to minimize lock hold time
+        wake = []
         with self.lock:
-            wake = []
             listeners = self.listeners_by_channel.get(channel, set())
             for listener in listeners:
                 if listener.user_id == user_id:
@@ -137,8 +142,10 @@ class ListenerManager(object):
                         "extra": {"channels": [channel]},
                     }
                     wake.append(listener)
-            for listener in wake:
-                listener.wake_threadsafe()
+        
+        # Wake listeners outside the lock to reduce contention
+        for listener in wake:
+            listener.wake_threadsafe()
 
 
 listener_manager = ListenerManager()
@@ -206,15 +213,15 @@ async def stream(event_request, listener):
 
             # FIXME: reconcile without re-reading from db
 
-            lm.lock.acquire()
+            # Check for conflicts and clear if needed - minimize lock hold time
             conflict = False
-            if len(listener.channel_items) > 0:
-                # items were queued while reading from the db. toss them and
-                #   read from db again
-                listener.aevent.clear()
-                listener.channel_items = {}
-                conflict = True
-            lm.lock.release()
+            with lm.lock:
+                if len(listener.channel_items) > 0:
+                    # items were queued while reading from the db. toss them and
+                    #   read from db again
+                    listener.aevent.clear()
+                    listener.channel_items = {}
+                    conflict = True
 
             if conflict:
                 continue
@@ -230,17 +237,15 @@ async def stream(event_request, listener):
                     body = "event: keep-alive\ndata:\n\n"
                     yield body
 
-                lm.lock.acquire()
+                # Get channel items outside the lock to minimize lock hold time
+                with lm.lock:
+                    channel_items = listener.channel_items
+                    overflow = listener.overflow
+                    error_data = listener.error
 
-                channel_items = listener.channel_items
-                overflow = listener.overflow
-                error_data = listener.error
-
-                listener.aevent.clear()
-                listener.channel_items = {}
-                listener.overflow = False
-
-                lm.lock.release()
+                    listener.aevent.clear()
+                    listener.channel_items = {}
+                    listener.overflow = False
 
                 body = ""
                 for channel, items in channel_items.items():
