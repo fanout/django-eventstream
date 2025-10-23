@@ -58,6 +58,12 @@ INSTALLED_APPS = [
 ]
 ```
 
+Add the following to the `settings.py` file:
+
+```py
+ASGI_APPLICATION = "your_project.asgi.application"
+```
+
 Add an endpoint in `urls.py`:
 
 ```py
