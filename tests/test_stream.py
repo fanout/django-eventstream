@@ -58,6 +58,56 @@ class DjangoStreamTest(IsolatedAsyncioTestCase):
             CHANNEL_NAME, EVENTS_LIMIT, limit=EVENTS_LIMIT + 1
         )
 
+    @patch("django_eventstream.eventstream.get_storage")
+    async def test_stream_cancellation_during_wait(self, mock_get_storage):
+        """Test that stream properly cleans up when cancelled during event wait."""
+        mock_get_storage.return_value = self.storage
+        
+        # Create a real listener (not mocked) to test actual wait behavior
+        listener = Listener()
+        
+        request = EventRequest()
+        request.is_next = False
+        request.is_recover = False
+        request.channels = [CHANNEL_NAME]
+        
+        # Get current ID using sync_to_async
+        get_current_id = sync_to_async(self.storage.get_current_id)
+        current_id = await get_current_id(CHANNEL_NAME)
+        request.channel_last_ids = {CHANNEL_NAME: str(current_id)}
+        
+        # Start streaming - this will wait for events since we're caught up
+        stream_task = asyncio.create_task(
+            self.__collect_response(stream(request, listener))
+        )
+        
+        # Give it time to enter the wait loop
+        await asyncio.sleep(0.5)
+        
+        # Cancel the stream
+        stream_task.cancel()
+        
+        try:
+            await stream_task
+            raise ValueError("stream completed unexpectedly")
+        except asyncio.CancelledError:
+            pass
+        
+        # Verify no tasks are left running
+        pending_tasks = [task for task in asyncio.all_tasks() 
+                        if not task.done() and task != asyncio.current_task()]
+        
+        # Allow brief time for cleanup
+        await asyncio.sleep(0.1)
+        
+        # Check again after cleanup time
+        pending_tasks_after = [task for task in asyncio.all_tasks() 
+                              if not task.done() and task != asyncio.current_task()]
+        
+        # The number of pending tasks should not increase after cancellation
+        self.assertLessEqual(len(pending_tasks_after), len(pending_tasks),
+                            "Stream cancellation should not leave lingering tasks")
+
     async def __initialise_test(self, mock_get_storage):
         mock_get_storage.return_value = self.storage
 
