@@ -38,7 +38,13 @@ if hasattr(settings, "EVENTSTREAM_REDIS"):
 
 
 def send_event(
-    channel, event_type, data, skip_user_ids=None, async_publish=True, json_encode=True
+    channel,
+    event_type,
+    data,
+    skip_user_ids=None,
+    async_publish=True,
+    json_encode=True,
+    persist=True,
 ):
     from .event import Event
     from .views import get_listener_manager
@@ -52,7 +58,7 @@ def send_event(
     storage = get_storage()
     channelmanager = get_channelmanager()
 
-    if channelmanager.is_channel_reliable(channel) and storage:
+    if persist and channelmanager.is_channel_reliable(channel) and storage:
         e = storage.append_event(channel, event_type, data)
         pub_id = str(e.id)
         pub_prev_id = str(e.id - 1)
