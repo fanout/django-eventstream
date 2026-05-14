@@ -51,3 +51,6 @@ zip-safe = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+addopts = "--reuse-db"
