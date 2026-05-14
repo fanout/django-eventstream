@@ -11,7 +11,6 @@ from unittest import IsolatedAsyncioTestCase
 from django_eventstream.storage import DjangoModelStorage
 from unittest.mock import patch
 
-
 EVENTS_LIMIT = 100
 EVENTS_OVER_LIMIT = 2
 INITIAL_EVENT = 0

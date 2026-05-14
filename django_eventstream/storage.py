@@ -118,12 +118,12 @@ class RedisStorage(StorageBase):
         """
         with self.redis.pipeline() as pipe:
             try:
-                pipe.incr("event_counter:" + channel)  
-                results = pipe.execute()              
-                event_id = results[0]    
+                pipe.incr("event_counter:" + channel)
+                results = pipe.execute()
+                event_id = results[0]
                 event_data = json.dumps({"type": event_type, "data": data})
-                
-                pipe.setex(                          
+
+                pipe.setex(
                     "event:" + channel + ":" + str(event_id),
                     EVENT_TIMEOUT * 60,
                     event_data,
