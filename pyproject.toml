@@ -33,6 +33,12 @@ dependencies = [
 [project.optional-dependencies]
 drf = ["djangorestframework>=3.16.1"]
 
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-django",
+]
+
 [tool.setuptools.packages.find]
 include = [
     "django_eventstream",
@@ -51,3 +57,6 @@ zip-safe = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+addopts = "--reuse-db"
