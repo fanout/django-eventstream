@@ -1,4 +1,3 @@
-import time
 import jwt
 import six
 from django.contrib.auth import get_user_model
@@ -42,13 +41,14 @@ class EventRequest(object):
 
         es_meta = {}
         if http_request.GET.get("es-meta"):
-            es_meta = jwt.decode(
-                http_request.GET["es-meta"],
-                settings.SECRET_KEY.encode("utf-8"),
-                algorithms=["HS256"],
-            )
-            if int(time.time()) >= es_meta["exp"]:
-                raise ValueError("es-meta signature is expired")
+            try:
+                es_meta = jwt.decode(
+                    http_request.GET["es-meta"],
+                    settings.SECRET_KEY.encode("utf-8"),
+                    algorithms=["HS256"],
+                )
+            except jwt.exceptions.InvalidTokenError as e:
+                raise EventRequest.Error("invalid es-meta ticket: %s" % str(e))
 
         if "user" in es_meta:
             if es_meta["user"] != "anonymous":
