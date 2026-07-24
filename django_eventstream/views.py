@@ -207,14 +207,16 @@ async def stream(event_request, listener):
             # FIXME: reconcile without re-reading from db
 
             lm.lock.acquire()
-            conflict = False
-            if len(listener.channel_items) > 0:
-                # items were queued while reading from the db. toss them and
-                #   read from db again
-                listener.aevent.clear()
-                listener.channel_items = {}
-                conflict = True
-            lm.lock.release()
+            try:
+                conflict = False
+                if len(listener.channel_items) > 0:
+                    # items were queued while reading from the db. toss them and
+                    #   read from db again
+                    listener.aevent.clear()
+                    listener.channel_items = {}
+                    conflict = True
+            finally:
+                lm.lock.release()
 
             if conflict:
                 continue
@@ -223,59 +225,64 @@ async def stream(event_request, listener):
 
             while True:
                 f = asyncio.ensure_future(listener.aevent.wait())
-                while True:
-                    done, _ = await asyncio.wait([f], timeout=20)
-                    if f in done:
-                        break
-                    body = "event: keep-alive\ndata:\n\n"
-                    yield body
+                try:
+                    while True:
+                        done, _ = await asyncio.wait([f], timeout=20)
+                        if f in done:
+                            break
+                        body = "event: keep-alive\ndata:\n\n"
+                        yield body
 
-                lm.lock.acquire()
+                    lm.lock.acquire()
+                    try:
+                        channel_items = listener.channel_items
+                        overflow = listener.overflow
+                        error_data = listener.error
 
-                channel_items = listener.channel_items
-                overflow = listener.overflow
-                error_data = listener.error
+                        listener.aevent.clear()
+                        listener.channel_items = {}
+                        listener.overflow = False
+                    finally:
+                        lm.lock.release()
 
-                listener.aevent.clear()
-                listener.channel_items = {}
-                listener.overflow = False
-
-                lm.lock.release()
-
-                body = ""
-                for channel, items in channel_items.items():
-                    for item in items:
-                        if channel in last_ids:
-                            if item.id is not None:
-                                last_ids[channel] = item.id
+                    body = ""
+                    for channel, items in channel_items.items():
+                        for item in items:
+                            if channel in last_ids:
+                                if item.id is not None:
+                                    last_ids[channel] = item.id
+                                else:
+                                    del last_ids[channel]
+                            if last_ids:
+                                event_id = make_id(last_ids)
                             else:
-                                del last_ids[channel]
-                        if last_ids:
-                            event_id = make_id(last_ids)
-                        else:
-                            event_id = None
-                        body += sse_encode_event(
-                            item.type, item.data, event_id=event_id
-                        )
+                                event_id = None
+                            body += sse_encode_event(
+                                item.type, item.data, event_id=event_id
+                            )
 
-                more = True
+                    more = True
 
-                if error_data:
-                    condition = error_data["condition"]
-                    text = error_data["text"]
-                    extra = error_data.get("extra")
-                    body += sse_encode_error(condition, text, extra=extra)
-                    more = False
+                    if error_data:
+                        condition = error_data["condition"]
+                        text = error_data["text"]
+                        extra = error_data.get("extra")
+                        body += sse_encode_error(condition, text, extra=extra)
+                        more = False
 
-                if body or not more:
-                    yield body
+                    if body or not more:
+                        yield body
 
-                if not more:
-                    break
+                    if not more:
+                        break
 
-                if overflow:
-                    # check db
-                    break
+                    if overflow:
+                        # check db
+                        break
+                finally:
+                    # Always cancel the future to prevent it from lingering
+                    if not f.done():
+                        f.cancel()
 
             event_request.channel_last_ids = last_ids
     finally:
